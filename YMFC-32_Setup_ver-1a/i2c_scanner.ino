@@ -7,8 +7,8 @@ void i2c_scanner(void) {
   Serial.println("");
   nDevices = 0;
   for (address = 1; address < 127; address++) {
-    HWire.beginTransmission(address);
-    error = HWire.endTransmission();
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
 
     if (error == 0) {
       Serial.print("I2C device found at address 0x");
@@ -33,4 +33,3 @@ void i2c_scanner(void) {
   delay(2000);
   print_intro();
 }
-

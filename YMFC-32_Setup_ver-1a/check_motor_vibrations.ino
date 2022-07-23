@@ -36,34 +36,34 @@ void check_motor_vibrations(void) {
       }
 
       if (data == '1') {                                                               //If the user requested 1.
-        TIMER4_BASE->CCR1 = channel_3;                                                 //Set the ESC 1 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
-        TIMER4_BASE->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
-        TIMER4_BASE->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
+        TIM4->CCR1 = channel_3;                                                 //Set the ESC 1 output pulse equal to the throttle input.
+        TIM4->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
+        TIM4->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
+        TIM4->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
       }
       if (data == '2') {                                                               //If the user requested 2.
-        TIMER4_BASE->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
-        TIMER4_BASE->CCR2 = channel_3;                                                 //Set the ESC 2 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
-        TIMER4_BASE->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
+        TIM4->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
+        TIM4->CCR2 = channel_3;                                                 //Set the ESC 2 output pulse equal to the throttle input.
+        TIM4->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
+        TIM4->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
       }
       if (data == '3') {                                                               //If the user requested 3.
-        TIMER4_BASE->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
-        TIMER4_BASE->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
-        TIMER4_BASE->CCR3 = channel_3;                                                 //Set the ESC 3 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
+        TIM4->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
+        TIM4->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
+        TIM4->CCR3 = channel_3;                                                 //Set the ESC 3 output pulse equal to the throttle input.
+        TIM4->CCR4 = 1000;                                                      //Keep the ESC 4 pulse at 1000us.
       }
       if (data == '4') {                                                               //If the user requested 4.
-        TIMER4_BASE->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
-        TIMER4_BASE->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
-        TIMER4_BASE->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
-        TIMER4_BASE->CCR4 = channel_3;                                                 //Set the ESC 4 output pulse equal to the throttle input.
+        TIM4->CCR1 = 1000;                                                      //Keep the ESC 1 pulse at 1000us.
+        TIM4->CCR2 = 1000;                                                      //Keep the ESC 2 pulse at 1000us.
+        TIM4->CCR3 = 1000;                                                      //Keep the ESC 3 pulse at 1000us.
+        TIM4->CCR4 = channel_3;                                                 //Set the ESC 4 output pulse equal to the throttle input.
       }
       if (data == '5') {                                                               //If the user requested 5.
-        TIMER4_BASE->CCR1 = channel_3;                                                 //Set the ESC 1 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR2 = channel_3;                                                 //Set the ESC 2 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR3 = channel_3;                                                 //Set the ESC 3 output pulse equal to the throttle input.
-        TIMER4_BASE->CCR4 = channel_3;                                                 //Set the ESC 4 output pulse equal to the throttle input.
+        TIM4->CCR1 = channel_3;                                                 //Set the ESC 1 output pulse equal to the throttle input.
+        TIM4->CCR2 = channel_3;                                                 //Set the ESC 2 output pulse equal to the throttle input.
+        TIM4->CCR3 = channel_3;                                                 //Set the ESC 3 output pulse equal to the throttle input.
+        TIM4->CCR4 = channel_3;                                                 //Set the ESC 4 output pulse equal to the throttle input.
       }
 
     }
@@ -90,4 +90,3 @@ void check_motor_vibrations(void) {
   loop_counter = 0;                                                                    //Reset the loop counter variable to 0.
   print_intro();                                                                       //Print the intro to the serial monitor.
 }
-

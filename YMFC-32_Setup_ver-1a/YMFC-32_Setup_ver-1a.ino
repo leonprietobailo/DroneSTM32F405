@@ -28,7 +28,7 @@ int16_t manual_gyro_roll_cal_value = 0;
 int16_t manual_gyro_yaw_cal_value = 0;
 
 
-HardWire HWire(2, I2C_FAST_MODE);
+//HardWire HWire(2, I2C_FAST_MODE);
 
 //Let's declare some variables so we can use them in the complete program.
 //int16_t = signed 16 bit integer
@@ -56,7 +56,7 @@ void setup() {
   pinMode(4, INPUT_ANALOG);
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.
   //The following function connects PB3 and PB4 to the alternate output function.
-  afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                     //Connects PB3 and PB4 to output function.
+  //afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                     //Connects PB3 and PB4 to output function.
 
   //On the Flip32 the LEDs are connected differently. A check is needed for controlling the LEDs.
   pinMode(PB3, INPUT);                                         //Set PB3 as input.
@@ -75,26 +75,26 @@ void setup() {
   timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
   delay(50);                                                    //Give the timers some time to start.
 
-  HWire.begin();                                                //Start the I2C as master
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  HWire.write(0x6B);                                            //We want to write to the PWR_MGMT_1 register (6B hex).
-  HWire.write(0x00);                                            //Set the register bits as 00000000 to activate the gyro.
-  HWire.endTransmission();                                      //End the transmission with the gyro.
+  Wire.begin();                                                //Start the I2C as master
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  Wire.write(0x6B);                                            //We want to write to the PWR_MGMT_1 register (6B hex).
+  Wire.write(0x00);                                            //Set the register bits as 00000000 to activate the gyro.
+  Wire.endTransmission();                                      //End the transmission with the gyro.
 
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  HWire.write(0x1B);                                            //We want to write to the GYRO_CONFIG register (1B hex).
-  HWire.write(0x08);                                            //Set the register bits as 00001000 (500dps full scale).
-  HWire.endTransmission();                                      //End the transmission with the gyro.
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  Wire.write(0x1B);                                            //We want to write to the GYRO_CONFIG register (1B hex).
+  Wire.write(0x08);                                            //Set the register bits as 00001000 (500dps full scale).
+  Wire.endTransmission();                                      //End the transmission with the gyro.
 
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  HWire.write(0x1C);                                            //We want to write to the ACCEL_CONFIG register (1A hex).
-  HWire.write(0x10);                                            //Set the register bits as 00010000 (+/- 8g full scale range).
-  HWire.endTransmission();                                      //End the transmission with the gyro.
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  Wire.write(0x1C);                                            //We want to write to the ACCEL_CONFIG register (1A hex).
+  Wire.write(0x10);                                            //Set the register bits as 00010000 (+/- 8g full scale range).
+  Wire.endTransmission();                                      //End the transmission with the gyro.
 
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  HWire.write(0x1A);                                            //We want to write to the CONFIG register (1A hex).
-  HWire.write(0x03);                                            //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz).
-  HWire.endTransmission();                                      //End the transmission with the gyro.
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  Wire.write(0x1A);                                            //We want to write to the CONFIG register (1A hex).
+  Wire.write(0x03);                                            //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz).
+  Wire.endTransmission();                                      //End the transmission with the gyro.
 
   print_intro();                                                //Print the intro on the serial monitor.
 }
@@ -110,16 +110,16 @@ void loop() {
   }
 
   if (!disable_throttle) {                                      //If the throttle is not disabled.
-    TIMER4_BASE->CCR1 = channel_3;                              //Set the throttle receiver input pulse to the ESC 1 output pulse.
-    TIMER4_BASE->CCR2 = channel_3;                              //Set the throttle receiver input pulse to the ESC 2 output pulse.
-    TIMER4_BASE->CCR3 = channel_3;                              //Set the throttle receiver input pulse to the ESC 3 output pulse.
-    TIMER4_BASE->CCR4 = channel_3;                              //Set the throttle receiver input pulse to the ESC 4 output pulse.
+    TIM4->CCR1 = channel_3;                              //Set the throttle receiver input pulse to the ESC 1 output pulse.
+    TIM4->CCR2 = channel_3;                              //Set the throttle receiver input pulse to the ESC 2 output pulse.
+    TIM4->CCR3 = channel_3;                              //Set the throttle receiver input pulse to the ESC 3 output pulse.
+    TIM4->CCR4 = channel_3;                              //Set the throttle receiver input pulse to the ESC 4 output pulse.
   }
   else {                                                        //If the throttle is disabled
-    TIMER4_BASE->CCR1 = 1000;                                   //Set the ESC 1 output to 1000us to disable the motor.
-    TIMER4_BASE->CCR2 = 1000;                                   //Set the ESC 2 output to 1000us to disable the motor.
-    TIMER4_BASE->CCR3 = 1000;                                   //Set the ESC 3 output to 1000us to disable the motor.
-    TIMER4_BASE->CCR4 = 1000;                                   //Set the ESC 4 output to 1000us to disable the motor.
+    TIM4->CCR1 = 1000;                                   //Set the ESC 1 output to 1000us to disable the motor.
+    TIM4->CCR2 = 1000;                                   //Set the ESC 2 output to 1000us to disable the motor.
+    TIM4->CCR3 = 1000;                                   //Set the ESC 3 output to 1000us to disable the motor.
+    TIM4->CCR4 = 1000;                                   //Set the ESC 4 output to 1000us to disable the motor.
   }
 
   if (data == 'a') {
@@ -207,18 +207,18 @@ void loop() {
 
 void gyro_signalen(void) {
   //Read the MPU-6050 data.
-  HWire.beginTransmission(gyro_address);                       //Start communication with the gyro.
-  HWire.write(0x3B);                                           //Start reading @ register 43h and auto increment with every read.
-  HWire.endTransmission();                                     //End the transmission.
-  HWire.requestFrom(gyro_address, 14);                         //Request 14 bytes from the MPU 6050.
+  Wire.beginTransmission(gyro_address);                       //Start communication with the gyro.
+  Wire.write(0x3B);                                           //Start reading @ register 43h and auto increment with every read.
+  Wire.endTransmission();                                     //End the transmission.
+  Wire.requestFrom(gyro_address, 14);                         //Request 14 bytes from the MPU 6050.
 
-  acc_axis[1] = HWire.read() << 8 | HWire.read();              //Add the low and high byte to the acc_x variable.
-  acc_axis[2] = HWire.read() << 8 | HWire.read();              //Add the low and high byte to the acc_y variable.
-  acc_axis[3] = HWire.read() << 8 | HWire.read();              //Add the low and high byte to the acc_z variable.
-  temperature = HWire.read() << 8 | HWire.read();              //Add the low and high byte to the temperature variable.
-  gyro_axis[1] = HWire.read() << 8 | HWire.read();             //Read high and low part of the angular data.
-  gyro_axis[2] = HWire.read() << 8 | HWire.read();             //Read high and low part of the angular data.
-  gyro_axis[3] = HWire.read() << 8 | HWire.read();             //Read high and low part of the angular data.
+  acc_axis[1] = Wire.read() << 8 | Wire.read();              //Add the low and high byte to the acc_x variable.
+  acc_axis[2] = Wire.read() << 8 | Wire.read();              //Add the low and high byte to the acc_y variable.
+  acc_axis[3] = Wire.read() << 8 | Wire.read();              //Add the low and high byte to the acc_z variable.
+  temperature = Wire.read() << 8 | Wire.read();              //Add the low and high byte to the temperature variable.
+  gyro_axis[1] = Wire.read() << 8 | Wire.read();             //Read high and low part of the angular data.
+  gyro_axis[2] = Wire.read() << 8 | Wire.read();             //Read high and low part of the angular data.
+  gyro_axis[3] = Wire.read() << 8 | Wire.read();             //Read high and low part of the angular data.
   gyro_axis[2] *= -1;                                          //Invert gyro so that nose up gives positive value.
   gyro_axis[3] *= -1;                                          //Invert gyro so that nose right gives positive value.
 
@@ -237,4 +237,3 @@ void green_led(int8_t level) {
   if (flip32)digitalWrite(PB3, !level);
   else digitalWrite(PB3, level);
 }
-
