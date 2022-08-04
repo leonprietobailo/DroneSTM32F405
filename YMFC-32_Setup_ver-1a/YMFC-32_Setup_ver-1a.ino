@@ -27,6 +27,10 @@ int16_t manual_gyro_pitch_cal_value = 0;
 int16_t manual_gyro_roll_cal_value = 0;
 int16_t manual_gyro_yaw_cal_value = 0;
 
+#define pin_INT_Throttle PA6 // Pin Throttle del mando RC
+#define pin_INT_Yaw PA7      // Pin Yaw del mando RC  
+#define pin_INT_Pitch PA5    // Pin Pitch del mando RC 
+#define pin_INT_Roll PA4     // Pin Roll del mando RC  
 
 //HardWire HWire(2, I2C_FAST_MODE);
 
