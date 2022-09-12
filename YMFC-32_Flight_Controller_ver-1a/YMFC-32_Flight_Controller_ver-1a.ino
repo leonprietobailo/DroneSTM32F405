@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>                          //Include the Wire.h library so we can communicate with the gyro.
-HardWire HWire(2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
+//HardWire HWire(2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -35,6 +35,15 @@ float pid_p_gain_yaw = 4.0;                //Gain setting for the pitch P-contro
 float pid_i_gain_yaw = 0.02;               //Gain setting for the pitch I-controller (default = 0.02).
 float pid_d_gain_yaw = 0.0;                //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
+
+uint16_t throttle_low  = 1140;             //Minimum Ch3 value
+uint16_t throttle_high = 1826;             //Maximum Ch3 value
+uint16_t roll_low      = 1040;             //Minimum Ch1 value
+uint16_t roll_high     = 1962;             //Maximum Ch1 value
+uint16_t pitch_low     = 1076;             //Minimum Ch2 value
+uint16_t pitch_high    = 1887;             //Maximum Ch2 value
+uint16_t yaw_low       = 1021;             //Minimum Ch4 value
+uint16_t yaw_high      = 1963;             //Maximum Ch4 value
 
 boolean auto_level = true;                 //Auto level on (true) or off (false).
 
@@ -58,15 +67,16 @@ uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 
 //uint16_t = unsigned 16 bit integer
 
 uint8_t last_channel_1, last_channel_2, last_channel_3, last_channel_4;
-uint8_t highByte, lowByte, flip32, start;
+uint8_t highByte, lowByte, flip32, start, warning;
 uint8_t error, error_counter, error_led;
+
 
 int16_t esc_1, esc_2, esc_3, esc_4;
 int16_t throttle, cal_int;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
 int16_t gyro_pitch, gyro_roll, gyro_yaw;
-
+int16_t loop_counter;
 
 int32_t channel_1_start, channel_1;
 int32_t channel_2_start, channel_2;
@@ -87,16 +97,21 @@ float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
 
+#define pin_INT_Throttle PA6 // Pin Throttle del mando RC
+#define pin_INT_Yaw PA7      // Pin Yaw del mando RC  
+#define pin_INT_Pitch PA5    // Pin Pitch del mando RC 
+#define pin_INT_Roll PA4     // Pin Roll del mando RC  
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
+  delay(5000);
   pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.
   //The following function connects PB3 and PB4 to the
   //alternate output function.
-  afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                    //Connects PB3 and PB4 to output function.
+  //afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                    //Connects PB3 and PB4 to output function.
 
   //On the Flip32 the LEDs are connected differently. A check is needed for controlling the LEDs.
   pinMode(PB3, INPUT);                                         //Set PB3 as input.
@@ -110,15 +125,15 @@ void setup() {
   green_led(LOW);                                               //Set output PB3 low.
   red_led(HIGH);                                                //Set output PB4 high.
 
-  //Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
-  //delay(250);                                                 //Give the serial port some time to start to prevent data loss.
+  Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
+  delay(250);                                                 //Give the serial port some time to start to prevent data loss.
 
   timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
   delay(50);                                                    //Give the timers some time to start.
 
-  HWire.begin();                                                //Start the I2C as master
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  error = HWire.endTransmission();                              //End the transmission and register the exit status.
+  Wire.begin();                                                //Start the I2C as master
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  error = Wire.endTransmission();                              //End the transmission and register the exit status.
   while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.
     error = 2;                                                  //Set the error status to 2.
     error_signal();                                             //Show the error via the red LED.
@@ -126,7 +141,7 @@ void setup() {
   }
 
   gyro_setup();                                                 //Initiallize the gyro and set the correct registers.
-
+  Serial.println("Gyro Setup");
   if (!use_manual_calibration) {
     //Create a 5 second delay before calibration.
     for (count_var = 0; count_var < 1250; count_var++) {        //1250 loops of 4 microseconds = 5 seconds
@@ -139,7 +154,7 @@ void setup() {
   }
 
   calibrate_gyro();                                             //Calibrate the gyro offset.
-
+  Serial.println("Gyro Calibration");
   //Wait until the receiver is active.
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
     error = 3;                                                  //Set the error status to 3.
@@ -147,15 +162,17 @@ void setup() {
     delay(4);
   }
   error = 0;                                                    //Reset the error status to 0.
-
+  
+  Serial.println("First Check");
+  
   //Wait until the throtle is set to the lower position.
-  while (channel_3 < 990 || channel_3 > 1050)  {
-    error = 4;                                                  //Set the error status to 4.
-    error_signal();                                             //Show the error via the red LED.
-    delay(4);
-  }
+//  while (channel_3 < 990 || channel_3 > 1050)  {
+//    error = 4;                                                  //Set the error status to 4.
+//    error_signal();                                             //Show the error via the red LED.
+//    delay(4);
+//  }
   error = 0;                                                    //Reset the error status to 0.
-
+  Serial.println("Second Check");
   //When everything is done, turn off the led.
   red_led(LOW);                                                 //Set output PB4 low.
 
@@ -170,12 +187,12 @@ void setup() {
   loop_timer = micros();                                        //Set the timer for the first loop.
 
   green_led(HIGH);                                              //Turn on the green led.
+  Serial.println("SETUP FINISHED");
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Main program loop
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
-
   error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
 
@@ -315,11 +332,20 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-  TIMER4_BASE->CCR1 = esc_1;                                                       //Set the throttle receiver input pulse to the ESC 1 output pulse.
-  TIMER4_BASE->CCR2 = esc_2;                                                       //Set the throttle receiver input pulse to the ESC 2 output pulse.
-  TIMER4_BASE->CCR3 = esc_3;                                                       //Set the throttle receiver input pulse to the ESC 3 output pulse.
-  TIMER4_BASE->CCR4 = esc_4;                                                       //Set the throttle receiver input pulse to the ESC 4 output pulse.
-  TIMER4_BASE->CNT = 5000;                                                         //This will reset timer 4 and the ESC pulses are directly created.
+  Serial.print(esc_1);
+  Serial.print("\t");
+  Serial.print(esc_2);
+  Serial.print("\t");
+  Serial.print(esc_3);
+  Serial.print("\t");
+  Serial.print(esc_4);
+  Serial.print("\n");
+  
+  TIM4->CCR1 = esc_1;                                                       //Set the throttle receiver input pulse to the ESC 1 output pulse.
+  TIM4->CCR2 = esc_2;                                                       //Set the throttle receiver input pulse to the ESC 2 output pulse.
+  TIM4->CCR3 = esc_3;                                                       //Set the throttle receiver input pulse to the ESC 3 output pulse.
+  TIM4->CCR4 = esc_4;                                                       //Set the throttle receiver input pulse to the ESC 4 output pulse.
+  TIM4->CNT = 5000;                                                         //This will reset timer 4 and the ESC pulses are directly created.
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:

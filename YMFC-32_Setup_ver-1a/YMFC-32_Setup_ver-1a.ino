@@ -56,6 +56,15 @@ int32_t channel_6_start, channel_6;
 //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
 uint8_t gyro_address = 0x68;
 
+uint16_t throttle_low  = 1140;             //Minimum Ch3 value
+uint16_t throttle_high = 1826;             //Maximum Ch3 value
+uint16_t roll_low      = 1040;             //Minimum Ch1 value
+uint16_t roll_high     = 1962;             //Maximum Ch1 value
+uint16_t pitch_low     = 1076;             //Minimum Ch2 value
+uint16_t pitch_high    = 1887;             //Maximum Ch2 value
+uint16_t yaw_low       = 1021;             //Minimum Ch4 value
+uint16_t yaw_high      = 1963;             //Maximum Ch4 value
+
 void setup() {
   pinMode(4, INPUT_ANALOG);
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.

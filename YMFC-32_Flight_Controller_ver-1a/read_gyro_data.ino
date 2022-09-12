@@ -2,17 +2,17 @@
 //This part reads the raw gyro and accelerometer data from the MPU-6050
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void gyro_signalen(void) {
-  HWire.beginTransmission(gyro_address);                       //Start communication with the gyro.
-  HWire.write(0x3B);                                           //Start reading @ register 43h and auto increment with every read.
-  HWire.endTransmission();                                     //End the transmission.
-  HWire.requestFrom(gyro_address, 14);                         //Request 14 bytes from the MPU 6050.
-  acc_y = HWire.read() << 8 | HWire.read();                    //Add the low and high byte to the acc_x variable.
-  acc_x = HWire.read() << 8 | HWire.read();                    //Add the low and high byte to the acc_y variable.
-  acc_z = HWire.read() << 8 | HWire.read();                    //Add the low and high byte to the acc_z variable.
-  temperature = HWire.read() << 8 | HWire.read();              //Add the low and high byte to the temperature variable.
-  gyro_roll = HWire.read() << 8 | HWire.read();                //Read high and low part of the angular data.
-  gyro_pitch = HWire.read() << 8 | HWire.read();               //Read high and low part of the angular data.
-  gyro_yaw = HWire.read() << 8 | HWire.read();                 //Read high and low part of the angular data.
+  Wire.beginTransmission(gyro_address);                       //Start communication with the gyro.
+  Wire.write(0x3B);                                           //Start reading @ register 43h and auto increment with every read.
+  Wire.endTransmission();                                     //End the transmission.
+  Wire.requestFrom(gyro_address, 14);                         //Request 14 bytes from the MPU 6050.
+  acc_y = Wire.read() << 8 | Wire.read();                    //Add the low and high byte to the acc_x variable.
+  acc_x = Wire.read() << 8 | Wire.read();                    //Add the low and high byte to the acc_y variable.
+  acc_z = Wire.read() << 8 | Wire.read();                    //Add the low and high byte to the acc_z variable.
+  temperature = Wire.read() << 8 | Wire.read();              //Add the low and high byte to the temperature variable.
+  gyro_roll = Wire.read() << 8 | Wire.read();                //Read high and low part of the angular data.
+  gyro_pitch = Wire.read() << 8 | Wire.read();               //Read high and low part of the angular data.
+  gyro_yaw = Wire.read() << 8 | Wire.read();                 //Read high and low part of the angular data.
   gyro_pitch *= -1;                                            //Invert the direction of the axis.
   gyro_yaw *= -1;                                              //Invert the direction of the axis.
 

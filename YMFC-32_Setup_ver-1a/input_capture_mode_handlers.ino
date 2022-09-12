@@ -103,13 +103,14 @@ const int us_min_Yaw_adj = -30;     // < – por este y viceversa
 
 
 
+
 // INTERRUPCIÓN MANDO RC – > PITCH
 volatile long Pitch_HIGH_us;
 volatile int RC_Pitch_raw;
 void handler_channel_2() {
   if (digitalRead(pin_INT_Pitch) == HIGH) Pitch_HIGH_us = micros();
   if (digitalRead(pin_INT_Pitch) == LOW)  RC_Pitch_raw  = micros() - Pitch_HIGH_us;
-  channel_2 = RC_Pitch_raw;
+  channel_2 = map(RC_Pitch_raw, pitch_low, pitch_high, 1000, 2000);
 
 }
 
@@ -120,7 +121,7 @@ volatile int RC_Yaw_raw;
 void handler_channel_4() {
   if (digitalRead(pin_INT_Yaw) == HIGH) Yaw_HIGH_us = micros();
   if (digitalRead(pin_INT_Yaw) == LOW)  RC_Yaw_raw  = micros() - Yaw_HIGH_us;
-  channel_4 = RC_Yaw_raw;
+  channel_4 = map(RC_Yaw_raw, yaw_low, yaw_high, 1000, 2000);
 }
 
 
@@ -130,8 +131,7 @@ volatile int RC_Throttle_raw;
 void handler_channel_3() {
   if (digitalRead(pin_INT_Throttle) == HIGH) Throttle_HIGH_us = micros();
   if (digitalRead(pin_INT_Throttle) == LOW)  RC_Throttle_raw  = micros() - Throttle_HIGH_us;
-  channel_3 = RC_Throttle_raw;
-  //Serial.println(channel_1);
+  channel_3 = map(RC_Throttle_raw, throttle_low, throttle_high, 1000, 2000);
 
 }
 
@@ -141,6 +141,6 @@ volatile int RC_Roll_raw;
 void handler_channel_1() {
   if (digitalRead(pin_INT_Roll) == HIGH) Roll_HIGH_us = micros();
   if (digitalRead(pin_INT_Roll) == LOW)  RC_Roll_raw  = micros() - Roll_HIGH_us;
-  channel_1 = RC_Roll_raw;
+  channel_1 = map(RC_Roll_raw, roll_low, roll_high, 1000, 2000);
 
 }
