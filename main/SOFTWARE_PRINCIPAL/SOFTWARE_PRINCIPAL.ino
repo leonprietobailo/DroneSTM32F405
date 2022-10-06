@@ -18,24 +18,23 @@ bool MODO_vuelo = 1;   // 0: Modo acrobatico, 1: Modo estable (por defecto MODO_
 
 #define usCiclo 6000   // Ciclo de ejecucion del software en microsegundos
 
-#define pin_motor1 3        // Pin motor 1
-#define pin_motor2 4        // Pin motor 2
-#define pin_motor3 5        // Pin motor 3
-#define pin_motor4 6        // Pin motor 4
-#define pin_INT_Throttle 8  // Pin Throttle del mando RC
-#define pin_INT_Yaw 7       // Pin Yaw del mando RC
-#define pin_INT_Pitch 12    // Pin Pitch del mando RC
-#define pin_INT_Roll 9      // Pin Roll del mando RC
+#define pin_motor1 PC6        // Pin motor 1  GPIO 6
+#define pin_motor2 PB8        // Pin motor 2  GPIO 9  
+#define pin_motor3 PB9        // Pin motor 3  GPIO 10
+#define pin_motor4 PC7        // Pin motor 4  GPIO 5
+#define pin_INT_Throttle PA6// Pin Throttle del mando RC
+#define pin_INT_Yaw PA7     // Pin Yaw del mando RC
+#define pin_INT_Pitch PA5   // Pin Pitch del mando RC
+#define pin_INT_Roll PA4    // Pin Roll del mando RC
 #define pin_LED_rojo1 10    // Pin LED rojo 1      
 #define pin_LED_rojo2 13    // Pin LED rojo 2    
 #define pin_LED_azul 11     // Pin LED azul    
-#define pin_LED_naranja A2  // Pin LED naranja    
+//#define pin_LED_naranja A8  // Pin LED naranja    
 // --------------------------------------------------------------------------------
 
-#include <EnableInterrupt.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+//#include <LiquidCrystal_I2C.h>
+//LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // AJUSTE DE PIDs
 // Modificar estos parámetros apara ajustar los PID
@@ -61,34 +60,36 @@ float PID_W_Pitch_consigna, PID_W_Roll_consigna;
 // AJUSTE MANDO RC - THROTLLE
 const int us_max_Throttle_adj = 1800;
 const int us_min_Throttle_adj = 970;
-const float us_max_Throttle_raw = 2004;  // <-- Si la entrada Throttle está invertida sustituir este valor
-const float us_min_Throttle_raw = 1116;  // <-- por este y viceversa
+const float us_max_Throttle_raw = 1140;  // <-- Si la entrada Throttle está invertida sustituir este valor
+const float us_min_Throttle_raw = 1826;  // <-- por este y viceversa
 
 // AJUSTE MANDO RC - PITCH
-const float us_max_Pitch_raw = 1952;
-const float us_min_Pitch_raw = 992;
-const int us_max_Pitch_adj = -30;  // <-- Si la entrada Pitch está invertida sustituir este valor
-const int us_min_Pitch_adj = 30;   // <-- por este y viceversa
+const float us_max_Pitch_raw = 1887;
+const float us_min_Pitch_raw = 1076;
+const int us_max_Pitch_adj = 30;  // <-- Si la entrada Pitch está invertida sustituir este valor
+const int us_min_Pitch_adj = -30;   // <-- por este y viceversa
 
 // AJUSTE MANDO RC - ROLL
-const float us_max_Roll_raw = 1960;
-const float us_min_Roll_raw = 992;
+const float us_max_Roll_raw = 1962;
+const float us_min_Roll_raw = 1040;
 const int us_max_Roll_adj = 30;    // <-- Si la entrada Roll está invertida sustituir este valor
 const int us_min_Roll_adj = -30;   // <-- por este y viceversa
 
 // AJUSTE MANDO RC - YAW
-const float us_max_Yaw_raw = 1928;
-const float us_min_Yaw_raw = 972;
+const float us_max_Yaw_raw = 1963;
+const float us_min_Yaw_raw = 1021;
 const int us_max_Yaw_adj = 30;     // <-- Si la entrada Yaw está invertida sustituir este valor
 const int us_min_Yaw_adj = -30;    // <-- por este y viceversa
+
+
 
 // MPU6050
 #define MPU6050_adress 0x68
 float angulo_pitch, angulo_roll, angulo_yaw, angulo_pitch_acc, angulo_roll_acc, temperature;
 float angulo_pitch_ant, angulo_roll_ant, angulo_yaw_ant;
-int gx, gy, gz, gyro_Z, gyro_X, gyro_Y, gyro_X_ant, gyro_Y_ant, gyro_Z_ant;
-float gyro_X_cal, gyro_Y_cal, gyro_Z_cal;
-float ax, ay, az, acc_X_cal, acc_Y_cal, acc_Z_cal, acc_total_vector;
+int16_t gx, gy, gz, gyro_Z, gyro_X, gyro_Y, gyro_X_ant, gyro_Y_ant, gyro_Z_ant;
+int32_t gyro_X_cal, gyro_Y_cal, gyro_Z_cal, acc_X_cal, acc_Y_cal, acc_Z_cal, acc_total_vector;
+int16_t ax, ay, az;
 bool set_gyro_angles, accCalibOK = false;
 float tiempo_ejecucion_MPU6050, tiempo_MPU6050_1;
 
@@ -105,6 +106,24 @@ int LED_contador;
 
 /// SEÑALES PWM
 float ESC1_us, ESC2_us, ESC3_us, ESC4_us;
+const int PWM_freq = 1000;
+
+TIM_TypeDef *Instance_motor1 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor1), PinMap_PWM);
+uint8_t channel_motor1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor1), PinMap_PWM));
+
+TIM_TypeDef *Instance_motor2 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor2), PinMap_PWM);
+uint8_t channel_motor2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor2), PinMap_PWM));
+
+TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
+uint8_t channel_motor3 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor3), PinMap_PWM));
+
+TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
+uint8_t channel_motor4 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor4), PinMap_PWM));
+
+HardwareTimer *MyTim_motor1 = new HardwareTimer(Instance_motor1);
+HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
+HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
+HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
 
 // MANDO RC
 float RC_Throttle_filt, RC_Pitch_filt, RC_Yaw_filt, RC_Roll_filt;
@@ -144,33 +163,36 @@ void INT_Yaw() {
 
 void setup() {
   // Iniciar I2C y LCD
+  delay(5000);
+
   Wire.begin();
-  lcd.init();
-  lcd.backlight();
+//  lcd.init();
+//  lcd.backlight();
 
   if (visu == 1) {
     // Solo iniciamos el monitor serie y aguno de los modos de visualización está activo
     Serial.begin(115200);
     // Avisar de que el modo visualización está activo encendiendo el LED naranja
-    analogWrite(pin_LED_naranja, 255);
+    //analogWrite(pin_LED_naranja, 255);
   }
-
+//  Serial.println("Setup Started");
   // Declaración de LEDs
-  pinMode(pin_LED_naranja, OUTPUT); // Led naranja --> Batería baja
+  //pinMode(pin_LED_naranja, OUTPUT); // Led naranja --> Batería baja
   pinMode(pin_LED_azul, OUTPUT);    // Led azul    --> Ciclo (parpadeo)
   pinMode(pin_LED_rojo1, OUTPUT);   // Led rojo 1  --> Error MPU6050
   pinMode(pin_LED_rojo2, OUTPUT);   // Led rojo 2  --> Tiempo de ciclo o de 1ms excedido
 
   // MandoRC: declaración de interrupciones
-  pinMode(pin_INT_Yaw, INPUT_PULLUP);                
-  enableInterrupt(pin_INT_Yaw, INT_Yaw, CHANGE);
-  pinMode(pin_INT_Throttle, INPUT_PULLUP);           
-  enableInterrupt(pin_INT_Throttle, INT_Throttle, CHANGE);
-  pinMode(pin_INT_Pitch, INPUT_PULLUP);              
-  enableInterrupt(12, INT_Pitch, CHANGE);
-  pinMode(pin_INT_Roll, INPUT_PULLUP);                 
-  enableInterrupt(pin_INT_Roll, INT_Roll, CHANGE);
-
+  pinMode(pin_INT_Yaw, INPUT);                
+  attachInterrupt(digitalPinToInterrupt(pin_INT_Yaw), INT_Yaw, CHANGE);
+  pinMode(pin_INT_Throttle, INPUT);           
+  attachInterrupt(digitalPinToInterrupt(pin_INT_Throttle), INT_Throttle, CHANGE);
+  pinMode(pin_INT_Pitch, INPUT);              
+  attachInterrupt(digitalPinToInterrupt(pin_INT_Pitch), INT_Pitch, CHANGE);
+  pinMode(pin_INT_Roll, INPUT);                 
+  attachInterrupt(digitalPinToInterrupt(pin_INT_Roll), INT_Roll, CHANGE);
+  if(visu == 1) Serial.println("Interrupts Set");
+  
   // Declaración de los pines de los motores
   pinMode(pin_motor1, OUTPUT);  //Motor 1
   pinMode(pin_motor2, OUTPUT);  //Motor 2
@@ -182,28 +204,44 @@ void setup() {
   digitalWrite(pin_motor3, LOW);
   digitalWrite(pin_motor4, LOW);
 
+  
+
+//  MyTim_motor1->setPWM(channel_motor1, pin_motor1, PWM_freq, 0);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor2->setPWM(channel_motor2, pin_motor2, PWM_freq, 0);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor3->setPWM(channel_motor3, pin_motor3, PWM_freq, 0);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor4->setPWM(channel_motor4, pin_motor4, PWM_freq, 0);  // PWM_freq Hertz, 0% dutycycle
+
+
+  if(visu == 1) Serial.println("Motors Initialisation");
+  
   // Para poder avanzar hay que encender el mando y bajar Throttle al mínimo
   digitalWrite(pin_LED_rojo2, HIGH);
-  lcd.setCursor(0, 0);
-  lcd.print("Encender mando");
-  lcd.setCursor(0, 1);
-  if (MODO_vuelo == 1) lcd.print("-MODO Estable-");
-  else lcd.print("-MODO Acro-");
+//  lcd.setCursor(0, 0);
+//  lcd.print("Encender mando");
+//  lcd.setCursor(0, 1);
+//  if (MODO_vuelo == 1) lcd.print("-MODO Estable-");
+//  else lcd.print("-MODO Acro-");
   while (RC_Throttle_consigna < 950 || RC_Throttle_consigna > 1050) RC_procesar();
   digitalWrite(pin_LED_rojo2, LOW);
-
+  
+  if(visu == 1) Serial.println("MPU Initialisation");  
   MPU6050_iniciar();         // Iniciar sensor MPU6050
+  if(visu == 1) Serial.println("MPU Callibration");
   MPU6050_calibrar();        // Calibrar sensor MPU6050
-  Lectura_tension_bateria(); // Leer tension de batería
+  if(visu == 1) Serial.println("Power Read");
+  //Lectura_tension_bateria(); // Leer tension de batería
+  if(visu == 1) Serial.println("Roll Check");
 
   // Para entrar el loop principal hay que mover el stick de Roll a la derecha
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("ROLL -->");
+//  lcd.clear();
+//  lcd.setCursor(0, 0);
+//  lcd.print("ROLL -->");
   while (RC_Roll_consigna < 10)RC_procesar();
 
-  lcd.clear();
+//  lcd.clear();
   loop_timer = micros();
+  if(visu == 1) Serial.println("Setup Finished");
+  digitalWrite(PC1, HIGH);
 }
 
 void loop() {
@@ -215,6 +253,7 @@ void loop() {
   loop_timer = micros();
 
   PWM();                           // Generar señales PWM para los motores
+  //RC_procesar();
   MPU6050_leer();                  // Leer sensor MPU6050
   MPU6050_procesar();              // Procesar datos del sensor MPU6050
   if (MODO_vuelo == 1)PID_ang();   // Obtener salida de los PID de inclinación
@@ -231,6 +270,7 @@ void loop() {
 
   // Visualización de variables
   if (visu == 1)Visualizaciones();
+  //Serial.println("Loop ended");
 }
 
 // Iniciar sensor MPU6050
@@ -256,9 +296,9 @@ void MPU6050_iniciar() {
 
   // Si hay un error en el sensor MPU6050 avisamos y enclavamos el programa
   if (Wire.read() != 0x08) {
-    lcd.backlight();
-    lcd.setCursor(0, 0);
-    lcd.print("MPU6050 error");
+//    lcd.backlight();
+//    lcd.setCursor(0, 0);
+//    lcd.print("MPU6050 error");
     while (1) {
       digitalWrite(pin_LED_rojo1, LOW);
       delay(500);
@@ -270,7 +310,7 @@ void MPU6050_iniciar() {
   // Activar y configurar filtro pasa bajos LPF que incorpora el sensor
   Wire.beginTransmission(MPU6050_adress);
   Wire.write(0x1A);
-  Wire.write(0x04);
+  Wire.write(0x06);
   Wire.endTransmission();
 
   /*
@@ -287,9 +327,9 @@ void MPU6050_iniciar() {
 
 // Calibrar sensor MPU6050
 void MPU6050_calibrar() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Calib. MPU6050");
+//  lcd.clear();
+//  lcd.setCursor(0, 0);
+//  lcd.print("Calib. MPU6050");
 
   // Calibrar giroscopio tomando 3000 muestras
   for (int cal_int = 0; cal_int < 3000 ; cal_int ++) {
@@ -384,7 +424,7 @@ void RC_procesar() {
   RC_Pitch_filt    = RC_Pitch_filt * 0.9 + RC_Pitch_raw * 0.1;
   RC_Roll_filt     = RC_Roll_filt  * 0.9 + RC_Roll_raw  * 0.1;
   RC_Yaw_filt      = RC_Yaw_filt   * 0.9 + RC_Yaw_raw   * 0.1;
-
+  
   // Mapeo de señales del mando RC
   RC_Throttle_consigna = map(RC_Throttle_filt, us_min_Throttle_raw, us_max_Throttle_raw, us_min_Throttle_adj, us_max_Throttle_adj);
   RC_Pitch_consigna    = map(RC_Pitch_filt, us_min_Pitch_raw, us_max_Pitch_raw, us_min_Pitch_adj, us_max_Pitch_adj);
@@ -395,6 +435,8 @@ void RC_procesar() {
   if (RC_Pitch_consigna < 3 && RC_Pitch_consigna > -3)RC_Pitch_consigna = 0;
   if (RC_Roll_consigna  < 3 && RC_Roll_consigna  > -3)RC_Roll_consigna  = 0;
   if (RC_Yaw_consigna   < 3 && RC_Yaw_consigna   > -3)RC_Yaw_consigna   = 0;
+
+  //Serial.println(RC_Throttle_consigna);
 }
 
 void Modulador() {
@@ -445,6 +487,20 @@ void Modulador() {
     if (ESC3_us > 2000) ESC3_us = 2000;
     if (ESC4_us > 2000) ESC4_us = 2000;
   }
+
+//  MyTim_motor1->setPWM(channel_motor1, pin_motor1, PWM_freq, (ESC1_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor2->setPWM(channel_motor2, pin_motor2, PWM_freq, (ESC2_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor3->setPWM(channel_motor3, pin_motor3, PWM_freq, (ESC3_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
+//  MyTim_motor4->setPWM(channel_motor4, pin_motor4, PWM_freq, (ESC4_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
+
+//  Serial.print((ESC1_us-1000)/10);
+//  Serial.print("\t");
+//  Serial.print((ESC2_us-1000)/10);
+//  Serial.print("\t");
+//  Serial.print((ESC3_us-1000)/10);
+//  Serial.print("\t");
+//  Serial.println((ESC4_us-1000)/10);
+
 }
 
 void PWM() {
@@ -570,8 +626,8 @@ void LED_blink() {
     if (digitalRead(pin_LED_azul) == LOW) digitalWrite(pin_LED_azul, HIGH);
     else digitalWrite(pin_LED_azul, LOW);
 
-    if (digitalRead(pin_LED_azul) == HIGH && LOW_BAT_WARING == 1)analogWrite(pin_LED_naranja, 0);
-    else analogWrite(pin_LED_naranja, 255);
+    //if (digitalRead(pin_LED_azul) == HIGH && LOW_BAT_WARING == 1)analogWrite(pin_LED_naranja, 0);
+    //else analogWrite(pin_LED_naranja, 255);
   }
   LED_contador++;
 }
@@ -601,14 +657,40 @@ void Visualizaciones() {
       Serial.print((gy - gyro_Y_cal) / 16.4);
       Serial.print("\t");
       Serial.println((gz - gyro_Z_cal) / 16.4);
+
+//      Serial.print(gx);
+//      Serial.print("\t");
+//      Serial.print(gy);
+//      Serial.print("\t");
+//      Serial.print(gz);
+//      Serial.print("\t");
+//      Serial.print(gyro_X_cal);
+//      Serial.print("\t");
+//      Serial.print(gyro_Y_cal);
+//      Serial.print("\t");
+//      Serial.println(gyro_Z_cal);
+
+
     }
 
     if (visu_select == 2) {
-      Serial.print(ax / 4096);
+      Serial.print((float)ax / 4096);
       Serial.print("\t");
-      Serial.print(ay / 4096);
+      Serial.print((float)ay / 4096);
       Serial.print("\t");
-      Serial.println(az / 4096);
+      Serial.println((float)az / 4096);
+
+//      Serial.print(ax);
+//      Serial.print("\t");
+//      Serial.print(ay);
+//      Serial.print("\t");
+//      Serial.print(az);
+//      Serial.print("\t");
+//      Serial.print(acc_X_cal);
+//      Serial.print("\t");
+//      Serial.print(acc_Y_cal);
+//      Serial.print("\t");
+//      Serial.println(acc_Z_cal);
     }
 
     if (visu_select == 3) {

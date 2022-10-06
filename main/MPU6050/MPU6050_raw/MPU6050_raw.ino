@@ -7,8 +7,8 @@
 
 // MPU6050
 #define MPU6050_adress 0x68
-int gx, gy, gz;
-float ax, ay, az, temperature;
+int16_t gx, gy, gz;
+int16_t ax, ay, az, temperature;
 
 void setup() {
   Wire.begin();
@@ -33,7 +33,9 @@ void loop() {
   Serial.print("\t");
   Serial.print(gy);
   Serial.print("\t");
-  Serial.println(gz);
+  Serial.print(gz);
+  Serial.print("\t");
+  Serial.println(temperature);
 }
 
 // Iniciar sensor MPU6050

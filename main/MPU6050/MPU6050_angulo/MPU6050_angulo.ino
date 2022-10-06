@@ -7,9 +7,9 @@
 #include <Wire.h>
 
 // MPU6050
-#define MPU6050_adress 0x68
-float gyro_Z, gyro_X, gyro_Y, temperature, gyro_X_cal, gyro_Y_cal, gyro_Z_cal;
-int gx, gy, gz, cal_int;
+uint8_t MPU6050_adress = 0x68;
+int16_t gyro_Z, gyro_X, gyro_Y, temperature, gyro_X_cal, gyro_Y_cal, gyro_Z_cal;
+int16_t gx, gy, gz, cal_int;
 float acc_total_vector, ax, ay, az;
 bool set_gyro_angles, accCalibOK  = false;
 float acc_X_cal, acc_Y_cal, acc_Z_cal, angulo_pitch_acc, angulo_roll_acc, angulo_pitch, angulo_roll;
@@ -18,7 +18,10 @@ long tiempo_ejecucion, loop_timer;
 
 void setup() {
   Wire.begin();
-  Serial.begin(115200);
+  Wire.beginTransmission(MPU6050_adress);                        //Start communication with the MPU-6050.
+  Wire.endTransmission();                              //End the transmission and register the exit status.
+
+  Serial.begin(57600);
 
   // Iniciar sensor MPU6050
   MPU6050_iniciar();
@@ -43,6 +46,10 @@ void setup() {
   acc_Z_cal  = acc_Z_cal  / 3000;
   accCalibOK = true;
 
+//  Serial.println(gyro_X_cal);
+//  Serial.println(gyro_Y_cal);
+//  Serial.println(gyro_Z_cal);
+  
   loop_timer = micros();
 }
 
@@ -64,18 +71,25 @@ void loop() {
 
 // Iniciar sensor MPU6050
 void MPU6050_iniciar() {
-  Wire.beginTransmission(MPU6050_adress);
-  Wire.write(0x6B);                          // PWR_MGMT_1 registro 6B hex
-  Wire.write(0x00);                          // 00000000 para activar
-  Wire.endTransmission();
-  Wire.beginTransmission(MPU6050_adress);
-  Wire.write(0x1B);                          // GYRO_CONFIG registro 1B hex
-  Wire.write(0x08);                          // 00001000: 500dps
-  Wire.endTransmission();
-  Wire.beginTransmission(MPU6050_adress);
-  Wire.write(0x1C);                          // ACCEL_CONFIG registro 1C hex
-  Wire.write(0x10);                          // 00010000: +/- 8g
-  Wire.endTransmission();
+  Wire.beginTransmission(MPU6050_adress);                        //Start communication with the MPU-6050.
+  Wire.write(0x6B);                                            //We want to write to the PWR_MGMT_1 register (6B hex).
+  Wire.write(0x00);                                            //Set the register bits as 00000000 to activate the gyro.
+  Wire.endTransmission();                                      //End the transmission with the gyro.
+
+  Wire.beginTransmission(MPU6050_adress);                        //Start communication with the MPU-6050.
+  Wire.write(0x1B);                                            //We want to write to the GYRO_CONFIG register (1B hex).
+  Wire.write(0x08);                                            //Set the register bits as 00001000 (500dps full scale).
+  Wire.endTransmission();                                      //End the transmission with the gyro.
+
+  Wire.beginTransmission(MPU6050_adress);                        //Start communication with the MPU-6050.
+  Wire.write(0x1C);                                            //We want to write to the ACCEL_CONFIG register (1A hex).
+  Wire.write(0x10);                                            //Set the register bits as 00010000 (+/- 8g full scale range).
+  Wire.endTransmission();                                      //End the transmission with the gyro.
+
+  Wire.beginTransmission(MPU6050_adress);                        //Start communication with the MPU-6050.
+  Wire.write(0x1A);                                            //We want to write to the CONFIG register (1A hex).
+  Wire.write(0x03);                                            //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz).
+  Wire.endTransmission();   
 }
 
 // Leer sensor MPU6050
@@ -90,10 +104,12 @@ void MPU6050_leer() {
   ax = Wire.read() << 8 | Wire.read();          // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
   ay = Wire.read() << 8 | Wire.read();          // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
   az = Wire.read() << 8 | Wire.read();          // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
+  
   temperature = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
   gx = Wire.read() << 8 | Wire.read();          // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   gy = Wire.read() << 8 | Wire.read();          // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   gz = Wire.read() << 8 | Wire.read();          // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
+  //Serial.println(ax);
 }
 
 // Cálculo de velocidad angular (º/s) y ángulo (º)
