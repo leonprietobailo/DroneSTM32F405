@@ -154,6 +154,10 @@ void setup() {
   }
 
   calibrate_gyro();                                             //Calibrate the gyro offset.
+
+  Serial.println(gyro_roll_cal); 
+  Serial.println(gyro_pitch_cal);                                         
+  Serial.println(gyro_yaw_cal);       
   Serial.println("Gyro Calibration");
   //Wait until the receiver is active.
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
