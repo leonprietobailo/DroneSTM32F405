@@ -14,8 +14,8 @@ void gyro_signalen(void) {
   gyro_pitch = Wire.read() << 8 | Wire.read();               //Read high and low part of the angular data.
   gyro_yaw = Wire.read() << 8 | Wire.read();                 //Read high and low part of the angular data.
   gyro_pitch *= -1;                                          //Invert the direction of the axis.
+  gyro_roll *= -1;
   gyro_yaw *= -1;                                            //Invert the direction of the axis.
-  Serial.println(acc_y);
   acc_y -= manual_acc_pitch_cal_value;                       //Subtact the manual accelerometer pitch calibration value.
   acc_x -= manual_acc_roll_cal_value;                        //Subtact the manual accelerometer roll calibration value.
   gyro_roll -= manual_gyro_roll_cal_value;                   //Subtact the manual gyro roll calibration value.

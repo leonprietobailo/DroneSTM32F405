@@ -75,7 +75,7 @@
 //}
 
 // long loop_timer, tiempo_ejecucion;
-float RC_Throttle_consigna, RC_Pitch_consigna, RC_Roll_consigna, RC_Yaw_consigna;
+//float RC_Throttle_consigna, RC_Pitch_consigna, RC_Roll_consigna, RC_Yaw_consigna;
 
 // AJUSTE MANDO RC - THROTLLE
 const int us_max_Throttle_adj = 50;

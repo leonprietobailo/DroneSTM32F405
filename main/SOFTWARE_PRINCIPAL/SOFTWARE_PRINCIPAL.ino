@@ -11,6 +11,36 @@
   - Motores y ESC:                  https://arduproject.es/motores-esc-y-su-programacion-en-arduino/
 */
 
+// PID FROM JOOP
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//PID gain and limit settings
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+float pid_p_gain_roll = 1.3;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_i_gain_roll = 0.04;              //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 18.0;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
+
+float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
+float pid_i_gain_pitch = pid_i_gain_roll;  //Gain setting for the pitch I-controller.
+float pid_d_gain_pitch = pid_d_gain_roll;  //Gain setting for the pitch D-controller.
+int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controller (+/-).
+
+float pid_p_gain_yaw = 4.0;                //Gain setting for the pitch P-controller (default = 4.0).
+float pid_i_gain_yaw = 0.02;               //Gain setting for the pitch I-controller (default = 0.02).
+float pid_d_gain_yaw = 0.0;                //Gain setting for the pitch D-controller (default = 0.0).
+int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
+
+// PID VAR
+float roll_level_adjust, pitch_level_adjust;
+float pid_error_temp;
+float pid_i_mem_roll, pid_roll_setpoint, gyro_roll_input, pid_output_roll, pid_last_roll_d_error;
+float pid_i_mem_pitch, pid_pitch_setpoint, gyro_pitch_input, pid_output_pitch, pid_last_pitch_d_error;
+float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_yaw_d_error;
+float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
+float battery_voltage;
+
+
 // --------------------------------------------------------------------------------
 bool visu = 0;         // Visualizar variables por canal serie. En vuelo a 0!!
 int visu_select = 4;   // 0: mando RC, 1: giro, 2: acc, 3: ang, 4: esc
@@ -26,28 +56,28 @@ bool MODO_vuelo = 1;   // 0: Modo acrobatico, 1: Modo estable (por defecto MODO_
 #define pin_INT_Yaw PA7     // Pin Yaw del mando RC
 #define pin_INT_Pitch PA5   // Pin Pitch del mando RC
 #define pin_INT_Roll PA4    // Pin Roll del mando RC
-#define pin_LED_rojo1 10    // Pin LED rojo 1      
-#define pin_LED_rojo2 13    // Pin LED rojo 2    
-#define pin_LED_azul 11     // Pin LED azul    
+//#define pin_LED_rojo1 10    // Pin LED rojo 1      
+//#define pin_LED_rojo2 13    // Pin LED rojo 2    
+//#define pin_LED_azul 11     // Pin LED azul    
 //#define pin_LED_naranja A8  // Pin LED naranja    
 // --------------------------------------------------------------------------------
-
+float pr = 2;
 #include <Wire.h>
 //#include <LiquidCrystal_I2C.h>
 //LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 // AJUSTE DE PIDs
 // Modificar estos parámetros apara ajustar los PID
-float Roll_ang_Kp  = 0.5, Roll_ang_Ki  = 0.05, Roll_ang_Kd  = 10;
-float Pitch_ang_Kp = 0.5, Pitch_ang_Ki = 0.05, Pitch_ang_Kd = 10;
+float Roll_ang_Kp  = 0.2, Roll_ang_Ki  = 0, Roll_ang_Kd  = 10;
+float Pitch_ang_Kp = 0.2, Pitch_ang_Ki = 0, Pitch_ang_Kd = 10;
 float Pitch_W_Kp   = 2,   Pitch_W_Ki   = 0.02, Pitch_W_Kd   = 0;
 float Roll_W_Kp    = 2,   Roll_W_Ki    = 0.02, Roll_W_Kd    = 0;
 float Yaw_W_Kp     = 1,   Yaw_W_Ki     = 0.05, Yaw_W_Kd     = 0;
 
 int PID_W_sat1   = 380;  // Limitar parte integral PID velocidad
 int PID_W_sat2   = 380;  // Limitar salida del PID velocidad
-int PID_ang_sat1 = 130;  // Limitar parte integral PID ángulo
-int PID_ang_sat2 = 130;  // Limitar salida del PID ángulo
+int PID_ang_sat1 = 400;  // Limitar parte integral PID ángulo
+int PID_ang_sat2 = 400;  // Limitar salida del PID ángulo
 
 float PID_ang_Pitch_error, PID_ang_Pitch_P, PID_ang_Pitch_I, PID_ang_Pitch_D, PID_ang_Pitch_OUT;
 float PID_ang_Roll_error, PID_ang_Roll_P, PID_ang_Roll_I, PID_ang_Roll_D, PID_ang_Roll_OUT;
@@ -87,9 +117,9 @@ const int us_min_Yaw_adj = -30;    // <-- por este y viceversa
 #define MPU6050_adress 0x68
 float angulo_pitch, angulo_roll, angulo_yaw, angulo_pitch_acc, angulo_roll_acc, temperature;
 float angulo_pitch_ant, angulo_roll_ant, angulo_yaw_ant;
-int16_t gx, gy, gz, gyro_Z, gyro_X, gyro_Y, gyro_X_ant, gyro_Y_ant, gyro_Z_ant;
-int32_t gyro_X_cal, gyro_Y_cal, gyro_Z_cal, acc_X_cal, acc_Y_cal, acc_Z_cal, acc_total_vector;
-int16_t ax, ay, az;
+float gyro_Z, gyro_X, gyro_Y, gyro_X_ant, gyro_Y_ant, gyro_Z_ant;
+float gyro_X_cal, gyro_Y_cal, gyro_Z_cal, acc_X_cal, acc_Y_cal, acc_Z_cal, acc_total_vector;
+int16_t gx, gy, gz, ax, ay, az;
 bool set_gyro_angles, accCalibOK = false;
 float tiempo_ejecucion_MPU6050, tiempo_MPU6050_1;
 
@@ -106,24 +136,25 @@ int LED_contador;
 
 /// SEÑALES PWM
 float ESC1_us, ESC2_us, ESC3_us, ESC4_us;
-const int PWM_freq = 1000;
 
-TIM_TypeDef *Instance_motor1 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor1), PinMap_PWM);
-uint8_t channel_motor1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor1), PinMap_PWM));
-
-TIM_TypeDef *Instance_motor2 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor2), PinMap_PWM);
-uint8_t channel_motor2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor2), PinMap_PWM));
-
-TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
-uint8_t channel_motor3 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor3), PinMap_PWM));
-
-TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
-uint8_t channel_motor4 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor4), PinMap_PWM));
-
-HardwareTimer *MyTim_motor1 = new HardwareTimer(Instance_motor1);
-HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
-HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
-HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
+//const int PWM_freq = 1000;
+//
+//TIM_TypeDef *Instance_motor1 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor1), PinMap_PWM);
+//uint8_t channel_motor1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor1), PinMap_PWM));
+//
+//TIM_TypeDef *Instance_motor2 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor2), PinMap_PWM);
+//uint8_t channel_motor2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor2), PinMap_PWM));
+//
+//TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
+//uint8_t channel_motor3 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor3), PinMap_PWM));
+//
+//TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
+//uint8_t channel_motor4 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor4), PinMap_PWM));
+//
+//HardwareTimer *MyTim_motor1 = new HardwareTimer(Instance_motor1);
+//HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
+//HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
+//HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
 
 // MANDO RC
 float RC_Throttle_filt, RC_Pitch_filt, RC_Yaw_filt, RC_Roll_filt;
@@ -178,9 +209,9 @@ void setup() {
 //  Serial.println("Setup Started");
   // Declaración de LEDs
   //pinMode(pin_LED_naranja, OUTPUT); // Led naranja --> Batería baja
-  pinMode(pin_LED_azul, OUTPUT);    // Led azul    --> Ciclo (parpadeo)
-  pinMode(pin_LED_rojo1, OUTPUT);   // Led rojo 1  --> Error MPU6050
-  pinMode(pin_LED_rojo2, OUTPUT);   // Led rojo 2  --> Tiempo de ciclo o de 1ms excedido
+  //pinMode(pin_LED_azul, OUTPUT);    // Led azul    --> Ciclo (parpadeo)
+  //pinMode(pin_LED_rojo1, OUTPUT);   // Led rojo 1  --> Error MPU6050
+  //pinMode(pin_LED_rojo2, OUTPUT);   // Led rojo 2  --> Tiempo de ciclo o de 1ms excedido
 
   // MandoRC: declaración de interrupciones
   pinMode(pin_INT_Yaw, INPUT);                
@@ -215,14 +246,14 @@ void setup() {
   if(visu == 1) Serial.println("Motors Initialisation");
   
   // Para poder avanzar hay que encender el mando y bajar Throttle al mínimo
-  digitalWrite(pin_LED_rojo2, HIGH);
+//  digitalWrite(pin_LED_rojo2, HIGH);
 //  lcd.setCursor(0, 0);
 //  lcd.print("Encender mando");
 //  lcd.setCursor(0, 1);
 //  if (MODO_vuelo == 1) lcd.print("-MODO Estable-");
 //  else lcd.print("-MODO Acro-");
   while (RC_Throttle_consigna < 950 || RC_Throttle_consigna > 1050) RC_procesar();
-  digitalWrite(pin_LED_rojo2, LOW);
+//  digitalWrite(pin_LED_rojo2, LOW);
   
   if(visu == 1) Serial.println("MPU Initialisation");  
   MPU6050_iniciar();         // Iniciar sensor MPU6050
@@ -246,7 +277,7 @@ void setup() {
 
 void loop() {
   // Si se supera el tiempo de ciclo, se activa el LED rojo 2
-  if (micros() - loop_timer > usCiclo + 50) digitalWrite(pin_LED_rojo2, HIGH);
+  //if (micros() - loop_timer > usCiclo + 50) digitalWrite(pin_LED_rojo2, HIGH);
   // Comienzo de un nuevo ciclo
   while (micros() - loop_timer < usCiclo);
   // Registrar instante de comienzo del ciclo
@@ -256,8 +287,47 @@ void loop() {
   //RC_procesar();
   MPU6050_leer();                  // Leer sensor MPU6050
   MPU6050_procesar();              // Procesar datos del sensor MPU6050
-  if (MODO_vuelo == 1)PID_ang();   // Obtener salida de los PID de inclinación
-  PID_w();                         // Obtener salida de los PID de velocidad
+  //if (MODO_vuelo == 1)PID_ang();   // Obtener salida de los PID de inclinación
+  //PID_w();                         // Obtener salida de los PID de velocidad
+
+  // PIDs from JOOP
+
+  //The PID set point in degrees per second is determined by the roll receiver input.
+  //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_roll_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (RC_Roll_consigna > 1508)pid_roll_setpoint = RC_Roll_consigna - 1508;
+  else if (RC_Roll_consigna < 1492)pid_roll_setpoint = RC_Roll_consigna - 1492;
+
+  pid_roll_setpoint -= roll_level_adjust;                                          //Subtract the angle correction from the standardized receiver roll input value.
+  pid_roll_setpoint /= 3.0;                                                        //Divide the setpoint for the PID roll controller by 3 to get angles in degrees.
+
+
+  //The PID set point in degrees per second is determined by the pitch receiver input.
+  //In the case of deviding by 3 the max pitch rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_pitch_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (RC_Pitch_consigna > 1508)pid_pitch_setpoint = RC_Pitch_consigna - 1508;
+  else if (RC_Pitch_consigna < 1492)pid_pitch_setpoint = RC_Pitch_consigna - 1492;
+
+  pid_pitch_setpoint -= pitch_level_adjust;                                        //Subtract the angle correction from the standardized receiver pitch input value.
+  pid_pitch_setpoint /= 3.0;                                                       //Divide the setpoint for the PID pitch controller by 3 to get angles in degrees.
+
+  //The PID set point in degrees per second is determined by the yaw receiver input.
+  //In the case of deviding by 3 the max yaw rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_yaw_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (RC_Throttle_consigna > 1050) { //Do not yaw when turning off the motors.
+    if (RC_Yaw_consigna > 1508)pid_yaw_setpoint = (RC_Yaw_consigna - 1508) / 3.0;
+    else if (RC_Yaw_consigna < 1492)pid_yaw_setpoint = (RC_Yaw_consigna - 1492) / 3.0;
+  }
+
+  calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
+
+
+
+
+
   Modulador();                     // Modulador o generador de señales para PWM
 
   // Guardamos las lecturas del sensor MPU6050 para el siguiente ciclo (necesario para los PID)
@@ -299,12 +369,12 @@ void MPU6050_iniciar() {
 //    lcd.backlight();
 //    lcd.setCursor(0, 0);
 //    lcd.print("MPU6050 error");
-    while (1) {
-      digitalWrite(pin_LED_rojo1, LOW);
-      delay(500);
-      digitalWrite(pin_LED_rojo1, HIGH);
-      delay(500);
-    }
+//    while (1) {
+//      digitalWrite(pin_LED_rojo1, LOW);
+//      delay(500);
+//      digitalWrite(pin_LED_rojo1, HIGH);
+//      delay(500);
+//    }
   }
 
   // Activar y configurar filtro pasa bajos LPF que incorpora el sensor
@@ -369,6 +439,12 @@ void MPU6050_leer() {
   gy = Wire.read() << 8 | Wire.read();          // 0x45 (GYRO_YOUT_H)  & 0x46 (GYRO_YOUT_L)
   gz = Wire.read() << 8 | Wire.read();          // 0x47 (GYRO_ZOUT_H)  & 0x48 (GYRO_ZOUT_L)
 
+//  Serial.print(gx);
+//  Serial.print("\t");
+//  Serial.print(gy);
+//  Serial.print("\t");
+//  Serial.println(gz);
+
   // Restar valores de calibracion del acelerómetro
   if (accCalibOK == true) {
     ax -= acc_X_cal;
@@ -416,6 +492,9 @@ void MPU6050_procesar() {
     angulo_roll  = angulo_roll_acc;
     set_gyro_angles = true;
   }
+
+  pitch_level_adjust = angulo_pitch * 15;
+  roll_level_adjust = angulo_roll * 15;
 }
 
 void RC_procesar() {
@@ -442,7 +521,7 @@ void RC_procesar() {
 void Modulador() {
   // Si el Throttle es menos a 1300us, el control de estabilidad se desactiva. La parte integral
   // de los controladores PID se fuerza a 0.
-  if (RC_Throttle_consigna <= 1300) {
+  if (RC_Throttle_consigna <= 1150) {
     PID_W_Pitch_I = 0;
     PID_W_Roll_I = 0;
     PID_W_Yaw_I  = 0;
@@ -467,14 +546,19 @@ void Modulador() {
     if (RC_Throttle_consigna > 1800)RC_Throttle_consigna = 1800;
 
     // Modulador
-    ESC1_us = RC_Throttle_consigna + PID_W_Pitch_OUT - PID_W_Roll_OUT - PID_W_Yaw_OUT; // Motor 1
-    ESC2_us = RC_Throttle_consigna + PID_W_Pitch_OUT + PID_W_Roll_OUT + PID_W_Yaw_OUT; // Motor 2
-    ESC3_us = RC_Throttle_consigna - PID_W_Pitch_OUT + PID_W_Roll_OUT - PID_W_Yaw_OUT; // Motor 3
-    ESC4_us = RC_Throttle_consigna - PID_W_Pitch_OUT - PID_W_Roll_OUT + PID_W_Yaw_OUT; // Motor 4
-    //    ESC1_us = RC_Throttle_filt; // Solo para testeos
-    //    ESC2_us = RC_Throttle_filt;
-    //    ESC3_us = RC_Throttle_filt;
-    //    ESC4_us = RC_Throttle_filt;
+//    ESC1_us = RC_Throttle_consigna + PID_W_Pitch_OUT - PID_W_Roll_OUT - PID_W_Yaw_OUT; // Motor 1
+//    ESC2_us = RC_Throttle_consigna + PID_W_Pitch_OUT + PID_W_Roll_OUT + PID_W_Yaw_OUT; // Motor 2
+//    ESC3_us = RC_Throttle_consigna - PID_W_Pitch_OUT + PID_W_Roll_OUT - PID_W_Yaw_OUT; // Motor 3
+//    ESC4_us = RC_Throttle_consigna - PID_W_Pitch_OUT - PID_W_Roll_OUT + PID_W_Yaw_OUT; // Motor 4
+
+    ESC1_us = RC_Throttle_consigna - pid_output_pitch + pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 1 (front-right - CCW).
+    ESC2_us = RC_Throttle_consigna + pid_output_pitch + pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 2 (rear-right - CW).
+    ESC3_us = RC_Throttle_consigna + pid_output_pitch - pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 3 (rear-left - CCW).
+    ESC4_us = RC_Throttle_consigna - pid_output_pitch - pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 4 (front-left - CW).
+//    ESC1_us = RC_Throttle_filt; // Solo para testeos
+//    ESC2_us = RC_Throttle_filt;
+//    ESC3_us = RC_Throttle_filt;
+//    ESC4_us = RC_Throttle_filt;
 
     // Evitamos que alguno de los motores de detenga completamente en pleno vuelo
     if (ESC1_us < 1100) ESC1_us = 1100;
@@ -482,10 +566,10 @@ void Modulador() {
     if (ESC3_us < 1100) ESC3_us = 1100;
     if (ESC4_us < 1100) ESC4_us = 1100;
     // Evitamos mandar consignas mayores a 2000us a los motores
-    if (ESC1_us > 2000) ESC1_us = 2000;
-    if (ESC2_us > 2000) ESC2_us = 2000;
-    if (ESC3_us > 2000) ESC3_us = 2000;
-    if (ESC4_us > 2000) ESC4_us = 2000;
+    if (ESC1_us > 1800) ESC1_us = 1800;
+    if (ESC2_us > 1800) ESC2_us = 1800;
+    if (ESC3_us > 1800) ESC3_us = 1800;
+    if (ESC4_us > 1800) ESC4_us = 1800;
   }
 
 //  MyTim_motor1->setPWM(channel_motor1, pin_motor1, PWM_freq, (ESC1_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
@@ -493,13 +577,13 @@ void Modulador() {
 //  MyTim_motor3->setPWM(channel_motor3, pin_motor3, PWM_freq, (ESC3_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
 //  MyTim_motor4->setPWM(channel_motor4, pin_motor4, PWM_freq, (ESC4_us-1000)/10);  // PWM_freq Hertz, 0% dutycycle
 
-//  Serial.print((ESC1_us-1000)/10);
+//  Serial.print(pid_output_pitch);
 //  Serial.print("\t");
-//  Serial.print((ESC2_us-1000)/10);
+//  Serial.print(pid_output_roll);
 //  Serial.print("\t");
-//  Serial.print((ESC3_us-1000)/10);
+//  Serial.println(pid_output_yaw);
 //  Serial.print("\t");
-//  Serial.println((ESC4_us-1000)/10);
+  //Serial.println((ESC4_us-1000)/10);
 
 }
 
@@ -515,14 +599,14 @@ void PWM() {
   tiempo_1 = micros();
 
   RC_procesar();             // Leer mando RC
-  LED_blink();               // LED parpadeo
+  // LED_blink();               // LED parpadeo
   Lectura_tension_bateria(); // Leer Vbat
 
   // Si la duracion entre tiempo_1 y tiempo_2 ha sido mayor de 900us, encender LED de aviso.
   // Nunca hay que sobrepasar 1ms de tiempo en estado HIGH.
   tiempo_2 = micros();
   tiempo_ON = tiempo_2 - tiempo_1;
-  if (tiempo_ON > 900) digitalWrite(pin_LED_rojo2, HIGH);
+  if (tiempo_ON > 900 && visu == 1) Serial.println("tiempo_ON > 900"); //digitalWrite(pin_LED_rojo2, HIGH);
   // ------------------ ¡¡1ms max!! ------------------
 
   // Pasamos las señales PWM a estado LOW cuando haya transcurrido el tiempo definido en las variables ESCx_us
@@ -555,6 +639,16 @@ void PID_ang() {
 
   PID_ang_Roll_OUT = PID_ang_Roll_P + PID_ang_Roll_I + PID_ang_Roll_D;           // Salida PID
   PID_ang_Roll_OUT = constrain(PID_ang_Roll_OUT, -PID_ang_sat2, PID_ang_sat2);   // Limitar salida del PID
+
+//  Serial.print(PID_ang_Pitch_OUT);
+//  Serial.print("\t");
+//  Serial.println(PID_ang_Roll_OUT);
+
+  PID_W_Pitch_OUT = PID_ang_Pitch_OUT;
+  //PID_W_Pitch_OUT = constrain(PID_W_Pitch_OUT, -PID_W_sat2, PID_W_sat2);
+  PID_W_Roll_OUT = PID_ang_Roll_OUT;
+  //PID_W_Roll_OUT = constrain(PID_W_Roll_OUT, -PID_W_sat2, PID_W_sat2);
+  PID_W_Yaw_OUT = 0;
 }
 
 // PID velocidad angular
@@ -621,16 +715,16 @@ void Lectura_tension_bateria() {
 }
 
 // Función para hacer parpadear el LED al entrar en el loop() principal
-void LED_blink() {
-  if (LED_contador % 20 == 0) {
-    if (digitalRead(pin_LED_azul) == LOW) digitalWrite(pin_LED_azul, HIGH);
-    else digitalWrite(pin_LED_azul, LOW);
-
-    //if (digitalRead(pin_LED_azul) == HIGH && LOW_BAT_WARING == 1)analogWrite(pin_LED_naranja, 0);
-    //else analogWrite(pin_LED_naranja, 255);
-  }
-  LED_contador++;
-}
+//void LED_blink() {
+//  if (LED_contador % 20 == 0) {
+//    if (digitalRead(pin_LED_azul) == LOW) digitalWrite(pin_LED_azul, HIGH);
+//    else digitalWrite(pin_LED_azul, LOW);
+//
+//    //if (digitalRead(pin_LED_azul) == HIGH && LOW_BAT_WARING == 1)analogWrite(pin_LED_naranja, 0);
+//    //else analogWrite(pin_LED_naranja, 255);
+//  }
+//  LED_contador++;
+//}
 
 // Visualizar variables por Monitor Serie
 // NOTA: al visualizar variables por el Monitor Serie es posible que se sobrepase el tiempo de ciclo establecido
@@ -719,4 +813,54 @@ void Visualizaciones() {
       Serial.println(tiempo_ejecucion_MPU6050);
     }
   }
+}
+
+void calculate_pid(void){
+  //Roll calculations
+  pid_error_temp = gyro_X - pid_roll_setpoint;
+  pid_i_mem_roll += pid_i_gain_roll * pid_error_temp;
+  if(pid_i_mem_roll > pid_max_roll)pid_i_mem_roll = pid_max_roll;
+  else if(pid_i_mem_roll < pid_max_roll * -1)pid_i_mem_roll = pid_max_roll * -1;
+
+  pid_output_roll = pid_p_gain_roll * pid_error_temp + pid_i_mem_roll + pid_d_gain_roll * (pid_error_temp - pid_last_roll_d_error);
+  if(pid_output_roll > pid_max_roll)pid_output_roll = pid_max_roll;
+  else if(pid_output_roll < pid_max_roll * -1)pid_output_roll = pid_max_roll * -1;
+
+  pid_last_roll_d_error = pid_error_temp;
+
+  
+  Serial.print(gyro_X);
+  Serial.print("\t");
+  Serial.println(pid_roll_setpoint);
+
+  //Pitch calculations
+  pid_error_temp = gyro_Y - pid_pitch_setpoint;
+  pid_i_mem_pitch += pid_i_gain_pitch * pid_error_temp;
+  if(pid_i_mem_pitch > pid_max_pitch)pid_i_mem_pitch = pid_max_pitch;
+  else if(pid_i_mem_pitch < pid_max_pitch * -1)pid_i_mem_pitch = pid_max_pitch * -1;
+
+  pid_output_pitch = pid_p_gain_pitch * pid_error_temp + pid_i_mem_pitch + pid_d_gain_pitch * (pid_error_temp - pid_last_pitch_d_error);
+  if(pid_output_pitch > pid_max_pitch)pid_output_pitch = pid_max_pitch;
+  else if(pid_output_pitch < pid_max_pitch * -1)pid_output_pitch = pid_max_pitch * -1;
+
+  pid_last_pitch_d_error = pid_error_temp;
+
+  
+//  Serial.print(pid_error_temp);
+//  Serial.print("\t");
+
+  //Yaw calculations
+  pid_error_temp = gyro_Z - pid_yaw_setpoint;
+  pid_i_mem_yaw += pid_i_gain_yaw * pid_error_temp;
+  if(pid_i_mem_yaw > pid_max_yaw)pid_i_mem_yaw = pid_max_yaw;
+  else if(pid_i_mem_yaw < pid_max_yaw * -1)pid_i_mem_yaw = pid_max_yaw * -1;
+
+  pid_output_yaw = pid_p_gain_yaw * pid_error_temp + pid_i_mem_yaw + pid_d_gain_yaw * (pid_error_temp - pid_last_yaw_d_error);
+  if(pid_output_yaw > pid_max_yaw)pid_output_yaw = pid_max_yaw;
+  else if(pid_output_yaw < pid_max_yaw * -1)pid_output_yaw = pid_max_yaw * -1;
+
+  pid_last_yaw_d_error = pid_error_temp;
+
+  //Serial.println(pid_error_temp);
+
 }

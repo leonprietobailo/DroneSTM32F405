@@ -21,9 +21,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 1.3;               //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0.04;              //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 18.0;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_p_gain_roll = 0.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_i_gain_roll = 0.0017;              //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 4;              //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -31,9 +31,9 @@ float pid_i_gain_pitch = pid_i_gain_roll;  //Gain setting for the pitch I-contro
 float pid_d_gain_pitch = pid_d_gain_roll;  //Gain setting for the pitch D-controller.
 int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controller (+/-).
 
-float pid_p_gain_yaw = 4.0;                //Gain setting for the pitch P-controller (default = 4.0).
-float pid_i_gain_yaw = 0.02;               //Gain setting for the pitch I-controller (default = 0.02).
-float pid_d_gain_yaw = 0.0;                //Gain setting for the pitch D-controller (default = 0.0).
+float pid_p_gain_yaw = 0.75;                //Gain setting for the pitch P-controller (default = 4.0).
+float pid_i_gain_yaw = 0.01;               //Gain setting for the pitch I-controller (default = 0.02).
+float pid_d_gain_yaw = 0;                //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
@@ -102,25 +102,53 @@ float battery_voltage;
 #define pin_INT_Pitch PA5    // Pin Pitch del mando RC 
 #define pin_INT_Roll PA4     // Pin Roll del mando RC  
 
+#define pin_motor1 PC6        // Pin motor 1  GPIO 6
+#define pin_motor2 PB8        // Pin motor 2  GPIO 10  
+#define pin_motor3 PB9        // Pin motor 3  GPIO 9
+#define pin_motor4 PC7        // Pin motor 4  GPIO 5
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(5000);
-  pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
+  //pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.
   //The following function connects PB3 and PB4 to the
   //alternate output function.
   //afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                    //Connects PB3 and PB4 to output function.
 
-  //On the Flip32 the LEDs are connected differently. A check is needed for controlling the LEDs.
-  pinMode(PB3, INPUT);                                         //Set PB3 as input.
-  pinMode(PB4, INPUT);                                         //Set PB4 as input.
-  if (digitalRead(PB3) || digitalRead(PB3))flip32 = 1;         //Input PB3 and PB4 are high on the Flip32
-  else flip32 = 0;
 
-  pinMode(PB3, OUTPUT);                                         //Set PB3 as output.
-  pinMode(PB4, OUTPUT);                                         //Set PB4 as output.
+  // Adding interrupts
+
+//  pinMode(pin_INT_Yaw, INPUT);                
+//  attachInterrupt(digitalPinToInterrupt(pin_INT_Yaw), INT_Yaw, CHANGE);
+//  pinMode(pin_INT_Throttle, INPUT);           
+//  attachInterrupt(digitalPinToInterrupt(pin_INT_Throttle), INT_Throttle, CHANGE);
+//  pinMode(pin_INT_Pitch, INPUT);              
+//  attachInterrupt(digitalPinToInterrupt(pin_INT_Pitch), INT_Pitch, CHANGE);
+//  pinMode(pin_INT_Roll, INPUT);                 
+//  attachInterrupt(digitalPinToInterrupt(pin_INT_Roll), INT_Roll, CHANGE);
+
+  // Declaración de los pines de los motores
+  pinMode(pin_motor1, OUTPUT);  //Motor 1
+  pinMode(pin_motor2, OUTPUT);  //Motor 2
+  pinMode(pin_motor3, OUTPUT);  //Motor 3
+  pinMode(pin_motor4, OUTPUT);  //Motor 4
+  // Forzar los pines a estado LOW
+  digitalWrite(pin_motor1, LOW);
+  digitalWrite(pin_motor2, LOW);
+  digitalWrite(pin_motor3, LOW);
+  digitalWrite(pin_motor4, LOW);
+  
+  //On the Flip32 the LEDs are connected differently. A check is needed for controlling the LEDs.
+//  pinMode(PB3, INPUT);                                         //Set PB3 as input.
+//  pinMode(PB4, INPUT);                                         //Set PB4 as input.
+//  if (digitalRead(PB3) || digitalRead(PB3))flip32 = 1;         //Input PB3 and PB4 are high on the Flip32
+//  else flip32 = 0;
+//
+//  pinMode(PB3, OUTPUT);                                         //Set PB3 as output.
+//  pinMode(PB4, OUTPUT);                                         //Set PB4 as output.
 
   green_led(LOW);                                               //Set output PB3 low.
   red_led(HIGH);                                                //Set output PB4 high.
@@ -186,7 +214,7 @@ void setup() {
   //The voltage divider (1k & 10k) is 1:11.
   //analogRead => 0 = 0V ..... 4095 = 36.3V
   //36.3 / 4095 = 112.81.
-  battery_voltage = (float)analogRead(4) / 112.81;
+  //battery_voltage = (float)analogRead(4) / 112.81;
 
   loop_timer = micros();                                        //Set the timer for the first loop.
 
@@ -197,6 +225,7 @@ void setup() {
 //Main program loop
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
+  PWM();
   error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
 
@@ -263,10 +292,10 @@ void loop() {
     pid_last_yaw_d_error = 0;
   }
   //Stopping the motors: throttle low and yaw right.
-  if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
-    start = 0;
-    green_led(HIGH);                                                               //Turn on the green led.
-  }
+//  if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
+//    start = 0;
+//    green_led(HIGH);                                                               //Turn on the green led.
+//  }
 
   //The PID set point in degrees per second is determined by the roll receiver input.
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
@@ -318,10 +347,10 @@ void loop() {
     esc_3 = throttle + pid_output_pitch - pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 3 (rear-left - CCW).
     esc_4 = throttle - pid_output_pitch - pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 4 (front-left - CW).
 
-    if (esc_1 < 1100) esc_1 = 1100;                                                //Keep the motors running.
-    if (esc_2 < 1100) esc_2 = 1100;                                                //Keep the motors running.
-    if (esc_3 < 1100) esc_3 = 1100;                                                //Keep the motors running.
-    if (esc_4 < 1100) esc_4 = 1100;                                                //Keep the motors running.
+    if (esc_1 < 1000) esc_1 = 950;                                                //Keep the motors running.
+    if (esc_2 < 1000) esc_2 = 950;                                                //Keep the motors running.
+    if (esc_3 < 1000) esc_3 = 950;                                                //Keep the motors running.
+    if (esc_4 < 1000) esc_4 = 950;                                                //Keep the motors running.
 
     if (esc_1 > 2000)esc_1 = 2000;                                                 //Limit the esc-1 pulse to 2000us.
     if (esc_2 > 2000)esc_2 = 2000;                                                 //Limit the esc-2 pulse to 2000us.
@@ -367,3 +396,55 @@ void loop() {
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
   loop_timer = micros();                                                           //Set the timer for the next loop.
 }
+
+long tiempo_motores_start, tiempo_1, tiempo_2, tiempo_ON;
+
+void PWM() {
+  // Para generar las 4 señales PWM, el primer paso es poner estas señales a 1 (HIGH).
+  digitalWrite(pin_motor1, HIGH);
+  digitalWrite(pin_motor2, HIGH);
+  digitalWrite(pin_motor3, HIGH);
+  digitalWrite(pin_motor4, HIGH);
+  tiempo_motores_start = micros();
+
+  // ------------------ ¡¡1ms max!! ------------------
+  tiempo_1 = micros();
+
+  //RC_procesar();             // Leer mando RC
+
+  // Si la duracion entre tiempo_1 y tiempo_2 ha sido mayor de 900us, encender LED de aviso.
+  // Nunca hay que sobrepasar 1ms de tiempo en estado HIGH.
+  tiempo_2 = micros();
+  tiempo_ON = tiempo_2 - tiempo_1;
+  // ------------------ ¡¡1ms max!! ------------------
+
+  // Pasamos las señales PWM a estado LOW cuando haya transcurrido el tiempo definido en las variables ESCx_us
+  while (digitalRead(pin_motor1) == HIGH || digitalRead(pin_motor2) == HIGH || digitalRead(pin_motor3) == HIGH || digitalRead(pin_motor4) == HIGH) {
+    if (tiempo_motores_start + esc_1 <= micros()) digitalWrite(pin_motor1, LOW);
+    if (tiempo_motores_start + esc_2 <= micros()) digitalWrite(pin_motor2, LOW);
+    if (tiempo_motores_start + esc_3 <= micros()) digitalWrite(pin_motor3, LOW);
+    if (tiempo_motores_start + esc_4 <= micros()) digitalWrite(pin_motor4, LOW);
+  }
+}
+
+//float RC_Throttle_filt, RC_Pitch_filt, RC_Yaw_filt, RC_Roll_filt;
+//
+//void RC_procesar() {
+//  //  Filtrado de lecturas raw del mando RC
+//  RC_Throttle_filt = RC_Throttle_filt * 0.9 + channel_3 * 0.1;
+//  RC_Pitch_filt    = RC_Pitch_filt * 0.9 + channel_2 * 0.1;
+//  RC_Roll_filt     = RC_Roll_filt  * 0.9 + channel_1  * 0.1;
+//  RC_Yaw_filt      = RC_Yaw_filt   * 0.9 + channel_4   * 0.1;
+//  
+//  // Mapeo de señales del mando RC
+//  RC_Throttle_consigna = map(RC_Throttle_filt, us_min_Throttle_raw, us_max_Throttle_raw, us_min_Throttle_adj, us_max_Throttle_adj);
+//  RC_Pitch_consigna    = map(RC_Pitch_filt, us_min_Pitch_raw, us_max_Pitch_raw, us_min_Pitch_adj, us_max_Pitch_adj);
+//  RC_Roll_consigna     = map(RC_Roll_filt, us_min_Roll_raw, us_max_Roll_raw, us_min_Roll_adj, us_max_Roll_adj);
+//  RC_Yaw_consigna      = map(RC_Yaw_filt, us_min_Yaw_raw, us_max_Yaw_raw, us_min_Yaw_adj, us_max_Yaw_adj);
+//
+////  // Si las lecturas son cercanas a 0, las forzamos a 0 para evitar inclinar el drone por error
+////  if (RC_Pitch_consigna < 3 && RC_Pitch_consigna > -3)RC_Pitch_consigna = 0;
+////  if (RC_Roll_consigna  < 3 && RC_Roll_consigna  > -3)RC_Roll_consigna  = 0;
+////  if (RC_Yaw_consigna   < 3 && RC_Yaw_consigna   > -3)RC_Yaw_consigna   = 0;
+//
+//}
