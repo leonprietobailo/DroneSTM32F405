@@ -22,8 +22,8 @@
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float pid_p_gain_roll = 0.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0.0017;              //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 4;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_i_gain_roll = 0.001;              //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 0.5;              //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -38,12 +38,12 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
 uint16_t throttle_high = 1826;             //Maximum Ch3 value
-uint16_t roll_low      = 1040;             //Minimum Ch1 value
-uint16_t roll_high     = 1962;             //Maximum Ch1 value
+uint16_t roll_low      = 1107;             //Minimum Ch1 value
+uint16_t roll_high     = 2083;             //Maximum Ch1 value
 uint16_t pitch_low     = 1076;             //Minimum Ch2 value
-uint16_t pitch_high    = 1887;             //Maximum Ch2 value
-uint16_t yaw_low       = 1021;             //Minimum Ch4 value
-uint16_t yaw_high      = 1963;             //Maximum Ch4 value
+uint16_t pitch_high    = 1905;             //Maximum Ch2 value
+uint16_t yaw_low       = 983;             //Minimum Ch4 value
+uint16_t yaw_high      = 2016;             //Maximum Ch4 value
 
 boolean auto_level = true;                 //Auto level on (true) or off (false).
 

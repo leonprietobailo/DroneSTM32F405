@@ -31,13 +31,13 @@ void setup() {
 }
 
 void loop() {
-  data = Serial.read();
-  if (data == 'q'){
+//  data = Serial.read();
+//  if (data == 'q'){
     Serial.println("Roll     - From: " + String(lowRoll) + " To: " + String(highRoll));
     Serial.println("Pitch    - From: " + String(lowPitch) + " To: " + String(highPitch));
     Serial.println("Throttle - From: " + String(lowThrottle) + " To: " + String(highThrottle));
     Serial.println("Yaw      - From: " + String(lowYaw) + " To: " + String(highYaw));
-  }
+  //}
 
 //  Serial.print(channel_1);
 //  Serial.print("\t");
