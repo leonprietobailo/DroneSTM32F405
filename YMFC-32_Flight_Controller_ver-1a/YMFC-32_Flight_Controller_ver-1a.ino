@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 //Terms of use
 ///////////////////////////////////////////////////////////////////////////////////////
 //THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -22,8 +22,8 @@
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float pid_p_gain_roll = 0.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0.001;              //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 0.5;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_i_gain_roll = 0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 0.5;               //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -31,9 +31,9 @@ float pid_i_gain_pitch = pid_i_gain_roll;  //Gain setting for the pitch I-contro
 float pid_d_gain_pitch = pid_d_gain_roll;  //Gain setting for the pitch D-controller.
 int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controller (+/-).
 
-float pid_p_gain_yaw = 0.75;                //Gain setting for the pitch P-controller (default = 4.0).
-float pid_i_gain_yaw = 0.01;               //Gain setting for the pitch I-controller (default = 0.02).
-float pid_d_gain_yaw = 0;                //Gain setting for the pitch D-controller (default = 0.0).
+float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
+float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller (default = 0.02).
+float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
@@ -42,7 +42,7 @@ uint16_t roll_low      = 1107;             //Minimum Ch1 value
 uint16_t roll_high     = 2083;             //Maximum Ch1 value
 uint16_t pitch_low     = 1076;             //Minimum Ch2 value
 uint16_t pitch_high    = 1905;             //Maximum Ch2 value
-uint16_t yaw_low       = 983;             //Minimum Ch4 value
+uint16_t yaw_low       = 983;              //Minimum Ch4 value
 uint16_t yaw_high      = 2016;             //Maximum Ch4 value
 
 boolean auto_level = true;                 //Auto level on (true) or off (false).
@@ -97,23 +97,30 @@ float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
 
-#define pin_INT_Throttle PA6 // Pin Throttle del mando RC
-#define pin_INT_Yaw PA7      // Pin Yaw del mando RC  
-#define pin_INT_Pitch PA5    // Pin Pitch del mando RC 
-#define pin_INT_Roll PA4     // Pin Roll del mando RC  
+#define pin_INT_Throttle PA6  // Pin Throttle del mando RC
+#define pin_INT_Yaw PA7       // Pin Yaw del mando RC  
+#define pin_INT_Pitch PA5     // Pin Pitch del mando RC 
+#define pin_INT_Roll PA4      // Pin Roll del mando RC  
 
 #define pin_motor1 PC6        // Pin motor 1  GPIO 6
-#define pin_motor2 PB8        // Pin motor 2  GPIO 10  
-#define pin_motor3 PB9        // Pin motor 3  GPIO 9
-#define pin_motor4 PC7        // Pin motor 4  GPIO 5
+#define pin_motor2 PC7        // Pin motor 2  GPIO 5  
+#define pin_motor3 PB9        // Pin motor 3  GPIO 10
+#define pin_motor4 PB8        // Pin motor 4  GPIO 9
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(5000);
+
+  
+// LEDS
+  pinMode(PC1, OUTPUT);
+  pinMode(PC2, OUTPUT);
+
+
   //pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
-  //Port PB3 and PB4 are used as JTDO and JNTRST by default.
+  //Port PB3 and PB4 are used as JTDO and JNTRST by default.esc
   //The following function connects PB3 and PB4 to the
   //alternate output function.
   //afio_cfg_debug_ports(AFIO_DEBUG_SW_ONLY);                    //Connects PB3 and PB4 to output function.
@@ -147,8 +154,6 @@ void setup() {
 //  if (digitalRead(PB3) || digitalRead(PB3))flip32 = 1;         //Input PB3 and PB4 are high on the Flip32
 //  else flip32 = 0;
 //
-//  pinMode(PB3, OUTPUT);                                         //Set PB3 as output.
-//  pinMode(PB4, OUTPUT);                                         //Set PB4 as output.
 
   green_led(LOW);                                               //Set output PB3 low.
   red_led(HIGH);                                                //Set output PB4 high.
@@ -271,7 +276,6 @@ void loop() {
     roll_level_adjust = 0;                                                         //Set the roll angle correcion to zero.
   }
 
-
   //For starting the motors: throttle low and yaw left (step 1).
   if (channel_3 < 1050 && channel_4 < 1050)start = 1;
   //When yaw stick is back in the center position start the motors (step 2).
@@ -292,10 +296,10 @@ void loop() {
     pid_last_yaw_d_error = 0;
   }
   //Stopping the motors: throttle low and yaw right.
-//  if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
-//    start = 0;
-//    green_led(HIGH);                                                               //Turn on the green led.
-//  }
+  if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
+    start = 0;
+    green_led(HIGH);                                                                 //Turn on the green led.
+  }
 
   //The PID set point in degrees per second is determined by the roll receiver input.
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
@@ -342,10 +346,10 @@ void loop() {
 
   if (start == 2) {                                                                //The motors are started.
     if (throttle > 1800) throttle = 1800;                                          //We need some room to keep full control at full throttle.
-    esc_1 = throttle - pid_output_pitch + pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 1 (front-right - CCW).
-    esc_2 = throttle + pid_output_pitch + pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 2 (rear-right - CW).
-    esc_3 = throttle + pid_output_pitch - pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 3 (rear-left - CCW).
-    esc_4 = throttle - pid_output_pitch - pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 4 (front-left - CW).
+    esc_1 = throttle - pid_output_pitch - pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 1 (front-right - CCW).
+    esc_2 = throttle + pid_output_pitch - pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 2 (rear-right - CW).
+    esc_3 = throttle + pid_output_pitch + pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 3 (rear-left - CCW).
+    esc_4 = throttle - pid_output_pitch + pid_output_roll + pid_output_yaw;        //Calculate the pulse for esc 4 (front-left - CW).
 
     if (esc_1 < 1000) esc_1 = 950;                                                //Keep the motors running.
     if (esc_2 < 1000) esc_2 = 950;                                                //Keep the motors running.
@@ -365,6 +369,15 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
+//  Serial.print(channel_1);
+//  Serial.print("\t");
+//  Serial.print(channel_2);
+//  Serial.print("\t");
+//  Serial.print(channel_3);
+//  Serial.print("\t");
+//  Serial.print(channel_4);
+//  Serial.print("\n");
+
   Serial.print(esc_1);
   Serial.print("\t");
   Serial.print(esc_2);
@@ -374,12 +387,7 @@ void loop() {
   Serial.print(esc_4);
   Serial.print("\n");
   
-  TIM4->CCR1 = esc_1;                                                       //Set the throttle receiver input pulse to the ESC 1 output pulse.
-  TIM4->CCR2 = esc_2;                                                       //Set the throttle receiver input pulse to the ESC 2 output pulse.
-  TIM4->CCR3 = esc_3;                                                       //Set the throttle receiver input pulse to the ESC 3 output pulse.
-  TIM4->CCR4 = esc_4;                                                       //Set the throttle receiver input pulse to the ESC 4 output pulse.
-  TIM4->CNT = 5000;                                                         //This will reset timer 4 and the ESC pulses are directly created.
-
+  
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:
   //https://youtu.be/Nju9rvZOjVQ

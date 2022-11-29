@@ -20,7 +20,7 @@ void calibrate_gyro(void) {
       gyro_yaw_cal += gyro_yaw;                                                       //Ad yaw value to gyro_yaw_cal.
       delay(4);                                                                       //Small delay to simulate a 250Hz loop during calibration.
     }
-    red_led(HIGH);                                                                     //Set output PB3 low.
+    //red_led(HIGH);                                                                     //Set output PB3 low.
     //Now that we have 2000 measures, we need to devide by 2000 to get the average gyro offset.
     gyro_roll_cal /= 2000;                                                            //Divide the roll total by 2000.
     gyro_pitch_cal /= 2000;                                                           //Divide the pitch total by 2000.
