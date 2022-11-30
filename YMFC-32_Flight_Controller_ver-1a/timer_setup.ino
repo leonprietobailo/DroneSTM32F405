@@ -56,52 +56,52 @@ void timer_setup(void) {
 //  TIM3->DCR = 0;
 
 //A test is needed to check if the throttle input is active and valid. Otherwise the ESC's might start without any warning.
-  loop_counter = 0;
-  while ((channel_3 > 2100 || channel_3 < 900) && warning == 0) {
-    delay(100);
-    loop_counter++;
-    if (loop_counter == 40) {
-      Serial.println(F("Waiting for a valid receiver channel-3 input signal"));
-      Serial.println(F(""));
-      Serial.println(F("The input pulse should be between 1000 till 2000us"));
-      Serial.print(F("Current channel-3 receiver input value = "));
-      Serial.println(channel_3);
-      Serial.println(F(""));
-      Serial.println(F("Is the receiver connected and the transmitter on?"));
-      Serial.println(F("For more support and questions: www.brokking.net"));
-      Serial.println(F(""));
-      Serial.print(F("Waiting for another 5 seconds."));
-    }
-    if (loop_counter > 40 && loop_counter % 10 == 0)Serial.print(F("."));
-    
-    if (loop_counter == 90) {
-      Serial.println(F(""));
-      Serial.println(F(""));
-      Serial.println(F("The ESC outputs are disabled for safety!!!"));
-      warning = 1;
-    }
-  }
-  if (warning == 0) {
-//    TIM4->CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
-//    TIM4->CR2 = 0;
-//    TIM4->SMCR = 0;
-//    TIM4->DIER = 0;
-//    TIM4->EGR = 0;
-//    TIM4->CCMR1 = (0b110 << 4) | TIM_CCMR1_OC1PE |(0b110 << 12) | TIM_CCMR1_OC2PE;
-//    TIM4->CCMR2 = (0b110 << 4) | TIM_CCMR2_OC3PE |(0b110 << 12) | TIM_CCMR2_OC4PE;
-//    TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E;
-//    TIM4->PSC = 167;
-//    TIM4->ARR = 4000;
-//    TIM4->DCR = 0;
-//    TIM4->CCR1 = 1000;
-//
-//    TIM4->CCR1 = channel_3;
-//    TIM4->CCR2 = channel_3;
-//    TIM4->CCR3 = channel_3;
-//    TIM4->CCR4 = channel_3;
-//    pinMode(PB6, OUTPUT);
-//    pinMode(PB7, OUTPUT);
-//    pinMode(PB8, OUTPUT);
-//    pinMode(PB9, OUTPUT);
-  }
+//  loop_counter = 0;
+//  while ((channel_3 > 2100 || channel_3 < 900) && warning == 0) {
+//    delay(100);
+//    loop_counter++;
+//    if (loop_counter == 40) {
+//      Serial.println(F("Waiting for a valid receiver channel-3 input signal"));
+//      Serial.println(F(""));
+//      Serial.println(F("The input pulse should be between 1000 till 2000us"));
+//      Serial.print(F("Current channel-3 receiver input value = "));
+//      Serial.println(channel_3);
+//      Serial.println(F(""));
+//      Serial.println(F("Is the receiver connected and the transmitter on?"));
+//      Serial.println(F("For more support and questions: www.brokking.net"));
+//      Serial.println(F(""));
+//      Serial.print(F("Waiting for another 5 seconds."));
+//    }
+//    if (loop_counter > 40 && loop_counter % 10 == 0)Serial.print(F("."));
+//    
+//    if (loop_counter == 90) {
+//      Serial.println(F(""));
+//      Serial.println(F(""));
+//      Serial.println(F("The ESC outputs are disabled for safety!!!"));
+//      warning = 1;
+//    }
+//  }
+//  if (warning == 0) {
+////    TIM4->CR1 = TIM_CR1_CEN | TIM_CR1_ARPE;
+////    TIM4->CR2 = 0;
+////    TIM4->SMCR = 0;
+////    TIM4->DIER = 0;
+////    TIM4->EGR = 0;
+////    TIM4->CCMR1 = (0b110 << 4) | TIM_CCMR1_OC1PE |(0b110 << 12) | TIM_CCMR1_OC2PE;
+////    TIM4->CCMR2 = (0b110 << 4) | TIM_CCMR2_OC3PE |(0b110 << 12) | TIM_CCMR2_OC4PE;
+////    TIM4->CCER = TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E;
+////    TIM4->PSC = 167;
+////    TIM4->ARR = 4000;
+////    TIM4->DCR = 0;
+////    TIM4->CCR1 = 1000;
+////
+////    TIM4->CCR1 = channel_3;
+////    TIM4->CCR2 = channel_3;
+////    TIM4->CCR3 = channel_3;
+////    TIM4->CCR4 = channel_3;
+////    pinMode(PB6, OUTPUT);
+////    pinMode(PB7, OUTPUT);
+////    pinMode(PB8, OUTPUT);
+////    pinMode(PB9, OUTPUT);
+//  }
 }
