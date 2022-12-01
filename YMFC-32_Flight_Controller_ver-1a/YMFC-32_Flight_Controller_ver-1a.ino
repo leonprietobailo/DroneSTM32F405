@@ -21,7 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 1; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_p_gain_roll = 0.6; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
 float pid_i_gain_roll = 0; //0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
 float pid_d_gain_roll = 0.5;               //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
@@ -34,7 +34,7 @@ int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controlle
 float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
 float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller (default = 0.02).
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
-int pid_max_yaw = 0;                     //Maximum output of the PID-controller (+/-).
+int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
 uint16_t throttle_high = 1826;             //Maximum Ch3 value
