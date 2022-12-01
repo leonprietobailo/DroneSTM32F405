@@ -38,12 +38,12 @@ int pid_max_yaw = 0;                     //Maximum output of the PID-controller 
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
 uint16_t throttle_high = 1826;             //Maximum Ch3 value
-uint16_t roll_low      = 1107;             //Minimum Ch1 value
-uint16_t roll_high     = 2083;             //Maximum Ch1 value
+uint16_t roll_low      = 1053;             //Minimum Ch1 value
+uint16_t roll_high     = 1952;             //Maximum Ch1 value
 uint16_t pitch_low     = 1076;             //Minimum Ch2 value
 uint16_t pitch_high    = 1905;             //Maximum Ch2 value
-uint16_t yaw_low       = 983;              //Minimum Ch4 value
-uint16_t yaw_high      = 2016;             //Maximum Ch4 value
+uint16_t yaw_low       = 1017;              //Minimum Ch4 value
+uint16_t yaw_high      = 1952;             //Maximum Ch4 value
 
 boolean auto_level = true;                 //Auto level on (true) or off (false).
 
@@ -377,15 +377,29 @@ void loop() {
 //  Serial.print(channel_4);
 //  Serial.print("\n");
 
-  Serial.print(esc_1);
-  Serial.print("\t");
-  Serial.print(esc_2);
-  Serial.print("\t");
-  Serial.print(esc_3);
-  Serial.print("\t");
-  Serial.print(esc_4);
-  Serial.print("\n");
-  
+//  Serial.print(esc_1);
+//  Serial.print("\t");
+//  Serial.print(esc_2);
+//  Serial.print("\t");
+//  Serial.print(esc_3);
+//  Serial.print("\t");
+//  Serial.print(esc_4);
+//  Serial.print("\n");
+
+//    Serial.print(acc_x);
+//    Serial.print("\t");
+//    Serial.print(acc_y);
+//    Serial.print("\t");
+//    Serial.print(acc_z);
+//    Serial.print("\t");
+//    Serial.print(temperature);
+//    Serial.print("\t");
+//    Serial.print(gyro_pitch);
+//    Serial.print("\t");
+//    Serial.print(gyro_roll);
+//    Serial.print("\t");
+//    Serial.print(gyro_yaw);
+//    Serial.print("\n");
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:
