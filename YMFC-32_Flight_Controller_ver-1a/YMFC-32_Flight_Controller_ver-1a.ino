@@ -21,9 +21,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 0.6; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_p_gain_roll = 0.8; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
 float pid_i_gain_roll = 0; //0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 0.5;               //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_d_gain_roll = 4;               //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -118,6 +118,8 @@ void setup() {
   pinMode(PC1, OUTPUT);
   pinMode(PC2, OUTPUT);
 
+  
+
 
   //pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.esc
@@ -159,10 +161,11 @@ void setup() {
   red_led(HIGH);                                                //Set output PB4 high.
 
   Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
+  Serial.println("***SETUP: STARTED***");
   delay(250);                                                 //Give the serial port some time to start to prevent data loss.
   timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
   delay(50);                                                    //Give the timers some time to start.
-
+  Serial.println("***GYRO ADDRESS: SEARCHING***");
   Wire.begin();                                                //Start the I2C as master
   Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
   error = Wire.endTransmission();                              //End the transmission and register the exit status.
@@ -171,9 +174,9 @@ void setup() {
     error_signal();                                             //Show the error via the red LED.
     delay(4);
   }
-
+  Serial.println("***GYRO ADDRESS: OBTAINED***");
   gyro_setup();                                                 //Initiallize the gyro and set the correct registers.
-  Serial.println("Gyro Setup");
+  Serial.println("***GYRO SETUP: DONE***");
   if (!use_manual_calibration) {
     //Create a 5 second delay before calibration.
     for (count_var = 0; count_var < 1250; count_var++) {        //1250 loops of 4 microseconds = 5 seconds
@@ -186,11 +189,9 @@ void setup() {
   }
 
   calibrate_gyro();                                             //Calibrate the gyro offset.
-
-  Serial.println(gyro_roll_cal); 
-  Serial.println(gyro_pitch_cal);                                         
-  Serial.println(gyro_yaw_cal);       
-  Serial.println("Gyro Calibration");
+  Serial.println("GYRO CALLIBRATION: DONE");
+  Serial.println("WAITING FOR TRANSMITTER...");
+  
   //Wait until the receiver is active.
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
     error = 3;                                                  //Set the error status to 3.
@@ -198,8 +199,7 @@ void setup() {
     delay(4);
   }
   error = 0;                                                    //Reset the error status to 0.
-  
-  Serial.println("First Check");
+  Serial.println("TRANSMITTER CONNECTED");
   
   //Wait until the throtle is set to the lower position.
 //  while (channel_3 < 990 || channel_3 > 1050)  {
@@ -208,7 +208,6 @@ void setup() {
 //    delay(4);
 //  }
   error = 0;                                                    //Reset the error status to 0.
-  Serial.println("Second Check");
   //When everything is done, turn off the led.
   red_led(LOW);                                                 //Set output PB4 low.
 
