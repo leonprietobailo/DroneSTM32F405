@@ -107,18 +107,25 @@ float battery_voltage;
 #define pin_motor3 PB9        // Pin motor 3  GPIO 10
 #define pin_motor4 PB8        // Pin motor 4  GPIO 9
 
+#define triggerPin PC3           // Trigger Pin Ultrasonico
+#define echoPin PC2           // Echo Pin Ultrasonico
+
+float distance = 13;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(5000);
 
-  
-// LEDS
+// Green LED
   pinMode(PC1, OUTPUT);
-  pinMode(PC2, OUTPUT);
 
-  
+// Distance Measurement PINS
+	pinMode(triggerPin, OUTPUT); // Sets the trigPin as an OUTPUT
+  digitalWrite(triggerPin, LOW);
+	pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
+  attachInterrupt(digitalPinToInterrupt(echoPin), echoPin_trigger, CHANGE);
 
 
   //pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
@@ -157,8 +164,7 @@ void setup() {
 //  else flip32 = 0;
 //
 
-  green_led(LOW);                                               //Set output PB3 low.
-  red_led(HIGH);                                                //Set output PB4 high.
+  led_off();
 
   Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
   Serial.println("***SETUP: STARTED***");
@@ -171,7 +177,7 @@ void setup() {
   error = Wire.endTransmission();                              //End the transmission and register the exit status.
   while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.
     error = 2;                                                  //Set the error status to 2.
-    error_signal();                                             //Show the error via the red LED.
+    //error_signal();                                             //Show the error via the red LED.
     delay(4);
   }
   Serial.println("***GYRO ADDRESS: OBTAINED***");
@@ -195,7 +201,7 @@ void setup() {
   //Wait until the receiver is active.
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
     error = 3;                                                  //Set the error status to 3.
-    error_signal();                                             //Show the error via the red LED.
+    //error_signal();                                             //Show the error via the red LED.
     delay(4);
   }
   error = 0;                                                    //Reset the error status to 0.
@@ -209,7 +215,6 @@ void setup() {
 //  }
   error = 0;                                                    //Reset the error status to 0.
   //When everything is done, turn off the led.
-  red_led(LOW);                                                 //Set output PB4 low.
 
   //Load the battery voltage to the battery_voltage variable.
   //The STM32 uses a 12 bit analog to digital converter.
@@ -221,7 +226,7 @@ void setup() {
 
   loop_timer = micros();                                        //Set the timer for the first loop.
 
-  green_led(HIGH);                                              //Turn on the green led.
+  led_on();                                         //Turn on the green led.
   Serial.println("SETUP FINISHED");
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +234,7 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
   PWM();
-  error_signal();                                                                  //Show the errors via the red LED.
+  //error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
 
   //65.5 = 1 deg/sec (check the datasheet of the MPU-6050 for more information).
@@ -280,7 +285,7 @@ void loop() {
   if (start == 1 && channel_3 < 1050 && channel_4 > 1450) {
     start = 2;
 
-    green_led(LOW);                                                                //Turn off the green led.
+    led_off();                                                                //Turn off the green led.
 
     angle_pitch = angle_pitch_acc;                                                 //Set the gyro pitch angle equal to the accelerometer pitch angle when the quadcopter is started.
     angle_roll = angle_roll_acc;                                                   //Set the gyro roll angle equal to the accelerometer roll angle when the quadcopter is started.
@@ -296,7 +301,7 @@ void loop() {
   //Stopping the motors: throttle low and yaw right.
   if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
     start = 0;
-    green_led(HIGH);                                                                 //Turn on the green led.
+    led_on();                                                                 //Turn on the green led.
   }
 
   //The PID set point in degrees per second is determined by the roll receiver input.
@@ -399,6 +404,9 @@ void loop() {
 //    Serial.print("\t");
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
+  measure_distance();
+  //Serial.println(distance);
+  
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:

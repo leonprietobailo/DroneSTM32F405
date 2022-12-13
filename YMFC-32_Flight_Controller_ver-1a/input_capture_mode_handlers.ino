@@ -113,7 +113,6 @@ void handler_channel_2() {
 
 }
 
-
 // INTERRUPCIÓN MANDO RC – > YAW
 volatile long Yaw_HIGH_us;
 volatile int RC_Yaw_raw;
@@ -122,7 +121,6 @@ void handler_channel_4() {
   if (digitalRead(pin_INT_Yaw) == LOW)  RC_Yaw_raw  = micros() - Yaw_HIGH_us;
   channel_4 = map(RC_Yaw_raw, yaw_low, yaw_high, 1000, 2000);
 }
-
 
 // INTERRUPCIÓN MANDO RC – > THROTTLE
 volatile long Throttle_HIGH_us;
