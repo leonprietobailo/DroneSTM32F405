@@ -346,7 +346,9 @@ void loop() {
   
 
   throttle = channel_3;                                                            //We need the throttle signal as a base signal.
-
+  measure_distance();
+  ultrasonicCorrection();
+  
   if (start == 2) {                                                                //The motors are started.
     if (throttle > 1800) throttle = 1800;                                          //We need some room to keep full control at full throttle.
     esc_1 = throttle - pid_output_pitch - pid_output_roll - pid_output_yaw;        //Calculate the pulse for esc 1 (front-right - CCW).
@@ -404,7 +406,7 @@ void loop() {
 //    Serial.print("\t");
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
-  measure_distance();
+ 
   //Serial.println(distance);
   
   

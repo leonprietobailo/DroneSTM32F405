@@ -14,6 +14,34 @@ void measure_distance(){
   } 
 }
 
+
+bool startUltrasonic = false;
+bool performAutolanding = false;
+int16_t mappedThrottle, throttleOutput, throttleTimer;
+
+
+void ultrasonicCorrection(){
+  if (distance > 50){ // ADD START COMMAND
+    startUltrasonic = true;
+  }
+  if (startUltrasonic){
+    mappedThrottle = map(distance, 40, 0, 0, 500);
+    if (throttle > 1050){
+      throttleTimer = millis();
+    }
+    else{
+      if (millis() - throttleTimer > 5000){
+        startUltrasonic = false;
+        performAutolanding = true;
+      }
+    }
+    throttle = mappedThrottle;
+  }
+  if (performAutolanding) {
+    throttle = mappedThrottle - 75;
+  }
+}
+
 void echoPin_trigger(){
   if(pulseSent){
     if (digitalRead(echoPin) == HIGH){
@@ -27,7 +55,6 @@ void echoPin_trigger(){
         distance = 0.9 * distance + 0.1 * computedDistance;
       }
       pulseSent = false;
-      Serial.println(distance);
     }
   }
 }
