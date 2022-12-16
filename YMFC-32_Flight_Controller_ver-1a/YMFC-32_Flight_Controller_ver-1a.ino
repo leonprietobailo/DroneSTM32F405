@@ -346,8 +346,10 @@ void loop() {
   
 
   throttle = channel_3;                                                            //We need the throttle signal as a base signal.
+  //Serial.println(throttle);
   measure_distance();
   ultrasonicCorrection();
+  
   
   if (start == 2) {                                                                //The motors are started.
     if (throttle > 1800) throttle = 1800;                                          //We need some room to keep full control at full throttle.
@@ -407,7 +409,7 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  //Serial.println(distance);
+  Serial.println(distance);
   
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -17,16 +17,23 @@ void measure_distance(){
 
 bool startUltrasonic = false;
 bool performAutolanding = false;
-int16_t mappedThrottle, throttleOutput, throttleTimer;
-
+int16_t mappedThrottle, throttleOutput;
+unsigned long throttleTimer;
 
 void ultrasonicCorrection(){
-  if (distance > 50){ // ADD START COMMAND
+  if (distance >= 100){ // ADD START COMMAND
     startUltrasonic = true;
   }
   if (startUltrasonic){
-    mappedThrottle = map(distance, 40, 0, 0, 500);
-    if (throttle > 1050){
+    led_slow();
+    if (distance < 40) {
+      mappedThrottle = map(distance, 60, 0, 0, 100);
+    }
+    else{
+      mappedThrottle = 0;
+    }
+    
+    if (throttle > 1000){
       throttleTimer = millis();
     }
     else{
@@ -35,10 +42,11 @@ void ultrasonicCorrection(){
         performAutolanding = true;
       }
     }
-    throttle = mappedThrottle;
+    throttle = throttle + mappedThrottle;
   }
   if (performAutolanding) {
-    throttle = mappedThrottle - 75;
+    throttle = throttle + mappedThrottle - 75;
+    led_fast();
   }
 }
 
@@ -51,9 +59,13 @@ void echoPin_trigger(){
       pulseEnd = micros();
       duration = pulseEnd - pulseStart;
       computedDistance = duration / 1e6 * cAir * 1e2 / 2.0;     // distance = duration [us] / 1e6 [us/s] * speedOfSound [m/s] * 1e2 [cm/m] / 2 (go and back] || [cm]
-      if (computedDistance < distance + 30 && computedDistance > distance - 30){
-        distance = 0.9 * distance + 0.1 * computedDistance;
+//      if (computedDistance > 120){
+//        computedDistance = 120;
+//      }
+      if (computedDistance < 10){
+        computedDistance = 10;
       }
+      distance = 0.95 * distance + 0.05 * computedDistance;
       pulseSent = false;
     }
   }
