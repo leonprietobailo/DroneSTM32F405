@@ -1,4 +1,35 @@
-//////////////////////////////////////////////////////////////////////////////////////
+//#include <bsp_sd.h>
+//#include <ffconf.h>
+//#include <ffconf_default_32020.h>
+//#include <ffconf_default_68300.h>
+//#include <Sd2Card.h>
+//#include <SdFatFs.h>
+//#include <STM32SD.h>
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//SD CARD
+///////////////////////////////////////////////////////////////////////////////////////
+
+//#ifndef SD_DETECT_PIN
+//#define SD_DETECT_PIN SD_DETECT_NONE
+//#endif
+
+//File dataFile;
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//RC
+///////////////////////////////////////////////////////////////////////////////////////
+
+#define numero_canales 8
+uint64_t pulso_instante[numero_canales * 2 + 2];
+uint16_t Mando_canal[numero_canales];
+uint8_t contador_flaco = 1;
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
 //Terms of use
 ///////////////////////////////////////////////////////////////////////////////////////
 //THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -97,10 +128,13 @@ float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
 
-#define pin_INT_Throttle PA6  // Pin Throttle del mando RC
-#define pin_INT_Yaw PA7       // Pin Yaw del mando RC  
-#define pin_INT_Pitch PA5     // Pin Pitch del mando RC 
-#define pin_INT_Roll PA4      // Pin Roll del mando RC  
+#define pin_PPM PA4
+
+
+//#define pin_INT_Throttle PA6  // Pin Throttle del mando RC
+//#define pin_INT_Yaw PA7       // Pin Yaw del mando RC  
+//#define pin_INT_Pitch PA5     // Pin Pitch del mando RC 
+//#define pin_INT_Roll PA4      // Pin Roll del mando RC  
 
 #define pin_motor1 PC6        // Pin motor 1  GPIO 6
 #define pin_motor2 PC7        // Pin motor 2  GPIO 5  
@@ -110,13 +144,27 @@ float battery_voltage;
 #define triggerPin PC3           // Trigger Pin Ultrasonico
 #define echoPin PC2           // Echo Pin Ultrasonico
 
-float distance = 13;
-
+float distance;
+float velocity;
+//String testString;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(5000);
+
+  // SD CARD
+  //while (!SD.begin(SD_DETECT_PIN))
+  //{
+  //  delay(10);
+  //}
+  //dataFile = SD.open("log.txt", FILE_WRITE);
+  //if (dataFile) {
+  //  dataFile.seek(dataFile.size());
+  //}
+  //else {
+  //  Serial.println("error opening datalog.txt");
+  //}
 
 // Green LED
   pinMode(PC1, OUTPUT);
@@ -126,6 +174,10 @@ void setup() {
   digitalWrite(triggerPin, LOW);
 	pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
   attachInterrupt(digitalPinToInterrupt(echoPin), echoPin_trigger, CHANGE);
+
+  // RC INTERRUPT
+  pinMode(pin_PPM, INPUT);                   // YAW
+  attachInterrupt(digitalPinToInterrupt(pin_PPM), read_PPM, CHANGE);
 
 
   //pinMode(4, INPUT_ANALOG);                                    //This is needed for reading the analog value of port A4.
@@ -169,7 +221,7 @@ void setup() {
   Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
   Serial.println("***SETUP: STARTED***");
   delay(250);                                                 //Give the serial port some time to start to prevent data loss.
-  timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
+  //timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
   delay(50);                                                    //Give the timers some time to start.
   Serial.println("***GYRO ADDRESS: SEARCHING***");
   Wire.begin();                                                //Start the I2C as master
@@ -199,8 +251,8 @@ void setup() {
   Serial.println("WAITING FOR TRANSMITTER...");
   
   //Wait until the receiver is active.
-  while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
-    error = 3;                                                  //Set the error status to 3.
+  while (Mando_canal[1] < 990 || Mando_canal[2] < 990 || Mando_canal[3] < 990 || Mando_canal[4] < 990)  {
+    read_RC();                                                //Set the error status to 3.
     //error_signal();                                             //Show the error via the red LED.
     delay(4);
   }
@@ -208,10 +260,8 @@ void setup() {
   Serial.println("TRANSMITTER CONNECTED");
   
   //Wait until the throtle is set to the lower position.
-//  while (channel_3 < 990 || channel_3 > 1050)  {
-//    error = 4;                                                  //Set the error status to 4.
-//    error_signal();                                             //Show the error via the red LED.
-//    delay(4);
+//  while (Mando_canal[3] < 990 || Mando_canal[3] > 1050)  {
+//    read_RC();
 //  }
   error = 0;                                                    //Reset the error status to 0.
   //When everything is done, turn off the led.
@@ -233,7 +283,14 @@ void setup() {
 //Main program loop
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
+//  testString = String(millis());
+//  testString += " ";
+//  testString += String(throttle);
+//  dataFile.println(testString);
+//  dataFile.flush();
+  
   PWM();
+  read_RC();
   //error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
 
@@ -280,9 +337,9 @@ void loop() {
   }
 
   //For starting the motors: throttle low and yaw left (step 1).
-  if (channel_3 < 1050 && channel_4 < 1050)start = 1;
+  if (Mando_canal[3] < 1050 && Mando_canal[4] < 1050)start = 1;
   //When yaw stick is back in the center position start the motors (step 2).
-  if (start == 1 && channel_3 < 1050 && channel_4 > 1450) {
+  if (start == 1 && Mando_canal[3] < 1050 && Mando_canal[4] > 1450) {
     start = 2;
 
     led_off();                                                                //Turn off the green led.
@@ -299,7 +356,7 @@ void loop() {
     pid_last_yaw_d_error = 0;
   }
   //Stopping the motors: throttle low and yaw right.
-  if (start == 2 && channel_3 < 1050 && channel_4 > 1950) {
+  if (start == 2 && Mando_canal[3] < 1050 && Mando_canal[4] > 1950) {
     start = 0;
     led_on();                                                                 //Turn on the green led.
   }
@@ -308,8 +365,8 @@ void loop() {
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_roll_setpoint = 0;
   //We need a little dead band of 16us for better results.
-  if (channel_1 > 1508)pid_roll_setpoint = channel_1 - 1508;
-  else if (channel_1 < 1492)pid_roll_setpoint = channel_1 - 1492;
+  if (Mando_canal[1] > 1508)pid_roll_setpoint = Mando_canal[1] - 1508;
+  else if (Mando_canal[1] < 1492)pid_roll_setpoint = Mando_canal[1] - 1492;
 
   pid_roll_setpoint -= roll_level_adjust;                                          //Subtract the angle correction from the standardized receiver roll input value.
   pid_roll_setpoint /= 3.0;                                                        //Divide the setpoint for the PID roll controller by 3 to get angles in degrees.
@@ -319,8 +376,8 @@ void loop() {
   //In the case of deviding by 3 the max pitch rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_pitch_setpoint = 0;
   //We need a little dead band of 16us for better results.
-  if (channel_2 > 1508)pid_pitch_setpoint = channel_2 - 1508;
-  else if (channel_2 < 1492)pid_pitch_setpoint = channel_2 - 1492;
+  if (Mando_canal[2] > 1508)pid_pitch_setpoint = Mando_canal[2] - 1508;
+  else if (Mando_canal[2] < 1492)pid_pitch_setpoint = Mando_canal[2] - 1492;
 
   pid_pitch_setpoint -= pitch_level_adjust;                                        //Subtract the angle correction from the standardized receiver pitch input value.
   pid_pitch_setpoint /= 3.0;                                                       //Divide the setpoint for the PID pitch controller by 3 to get angles in degrees.
@@ -329,9 +386,9 @@ void loop() {
   //In the case of deviding by 3 the max yaw rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_yaw_setpoint = 0;
   //We need a little dead band of 16us for better results.
-  if (channel_3 > 1050) { //Do not yaw when turning off the motors.
-    if (channel_4 > 1508)pid_yaw_setpoint = (channel_4 - 1508) / 3.0;
-    else if (channel_4 < 1492)pid_yaw_setpoint = (channel_4 - 1492) / 3.0;
+  if (Mando_canal[3] > 1050) { //Do not yaw when turning off the motors.
+    if (Mando_canal[4] > 1508)pid_yaw_setpoint = (Mando_canal[4] - 1508) / 3.0;
+    else if (Mando_canal[4] < 1492)pid_yaw_setpoint = (Mando_canal[4] - 1492) / 3.0;
   }
 
   calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
@@ -345,10 +402,14 @@ void loop() {
   if (battery_voltage < 10.0 && error == 0)error = 1;
   
 
-  throttle = channel_3;                                                            //We need the throttle signal as a base signal.
-  //Serial.println(throttle);
+  throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
+  
   measure_distance();
-  ultrasonicCorrection();
+  //ultrasonicCorrection();
+  //ultrasonicCorrectonV2();
+  ultrasonicCorrectonV3();
+  Serial.println(throttle);
+  //Serial.println(velocity);
   
   
   if (start == 2) {                                                                //The motors are started.
@@ -376,14 +437,18 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-//  Serial.print(channel_1);
-//  Serial.print("\t");
-//  Serial.print(channel_2);
-//  Serial.print("\t");
-//  Serial.print(channel_3);
-//  Serial.print("\t");
-//  Serial.print(channel_4);
-//  Serial.print("\n");
+  Serial.print(Mando_canal[1]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[2]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[3]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[4]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[5]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[6]);
+  Serial.print("\n");
 
 //  Serial.print(esc_1);
 //  Serial.print("\t");
@@ -409,7 +474,7 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  Serial.println(distance);
+  //Serial.println(distance);
   
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////

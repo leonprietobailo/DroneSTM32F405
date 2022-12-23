@@ -77,67 +77,82 @@
 // long loop_timer, tiempo_ejecucion;
 //float RC_Throttle_consigna, RC_Pitch_consigna, RC_Roll_consigna, RC_Yaw_consigna;
 
-// AJUSTE MANDO RC - THROTLLE
-const int us_max_Throttle_adj = 50;
-const int us_min_Throttle_adj = -50;
-const float us_max_Throttle_raw = 2004; // < – Si teneis la entrada Throttle invertida sustituid este valor
-const float us_min_Throttle_raw = 1116; // < – por este y viceversa
+//// AJUSTE MANDO RC - THROTLLE
+//const int us_max_Throttle_adj = 50;
+//const int us_min_Throttle_adj = -50;
+//const float us_max_Throttle_raw = 2004; // < – Si teneis la entrada Throttle invertida sustituid este valor
+//const float us_min_Throttle_raw = 1116; // < – por este y viceversa
+//
+//// AJUSTE MANDO RC - PITCH
+//const float us_max_Pitch_raw = 1952;
+//const float us_min_Pitch_raw = 992;
+//const int us_max_Pitch_adj = -30;   // < – Si teneis la entrada Pitch invertido sustituid este valor
+//const int us_min_Pitch_adj = 30;    // < – por este y viceversa
+//
+//// AJUSTE MANDO RC - ROLL
+//const float us_max_Roll_raw = 1960;
+//const float us_min_Roll_raw = 992;
+//const int us_max_Roll_adj = 30;     // < – Si teneis la entrada Roll invertido sustituid este valor
+//const int us_min_Roll_adj = -30;    // < – por este y viceversa
+//
+//// AJUSTE MANDO RC - YAW
+//const float us_max_Yaw_raw = 1928;
+//const float us_min_Yaw_raw = 972;
+//const int us_max_Yaw_adj = 30;      // < – Si teneis la entrada Yaw invertido sustituid este valor
+//const int us_min_Yaw_adj = -30;     // < – por este y viceversa
+//
+//
+//
+//// INTERRUPCIÓN MANDO RC – > PITCH
+//volatile long Pitch_HIGH_us;
+//volatile int RC_Pitch_raw;
+//void handler_channel_2() {
+//  if (digitalRead(pin_INT_Pitch) == HIGH) Pitch_HIGH_us = micros();
+//  if (digitalRead(pin_INT_Pitch) == LOW)  RC_Pitch_raw  = micros() - Pitch_HIGH_us;
+//  channel_2 = map(RC_Pitch_raw, pitch_low, pitch_high, 2000, 1000);
+//
+//}
+//
+//// INTERRUPCIÓN MANDO RC – > YAW
+//volatile long Yaw_HIGH_us;
+//volatile int RC_Yaw_raw;
+//void handler_channel_4() {
+//  if (digitalRead(pin_INT_Yaw) == HIGH) Yaw_HIGH_us = micros();
+//  if (digitalRead(pin_INT_Yaw) == LOW)  RC_Yaw_raw  = micros() - Yaw_HIGH_us;
+//  channel_4 = map(RC_Yaw_raw, yaw_low, yaw_high, 1000, 2000);
+//}
+//
+//// INTERRUPCIÓN MANDO RC – > THROTTLE
+//volatile long Throttle_HIGH_us;
+//volatile int RC_Throttle_raw;
+//void handler_channel_3() {
+//  if (digitalRead(pin_INT_Throttle) == HIGH) Throttle_HIGH_us = micros();
+//  if (digitalRead(pin_INT_Throttle) == LOW)  RC_Throttle_raw  = micros() - Throttle_HIGH_us;
+//  channel_3 = map(RC_Throttle_raw, throttle_low, throttle_high, 2000, 1000);
+//
+//}
+//
+//// INTERRUPCIÓN MANDO RC – > ROLL
+//volatile long Roll_HIGH_us;
+//volatile int RC_Roll_raw;
+//void handler_channel_1() {
+//  if (digitalRead(pin_INT_Roll) == HIGH) Roll_HIGH_us = micros();
+//  if (digitalRead(pin_INT_Roll) == LOW)  RC_Roll_raw  = micros() - Roll_HIGH_us;
+//  channel_1 = map(RC_Roll_raw, roll_low, roll_high, 1000, 2000);
+//
+//}
 
-// AJUSTE MANDO RC - PITCH
-const float us_max_Pitch_raw = 1952;
-const float us_min_Pitch_raw = 992;
-const int us_max_Pitch_adj = -30;   // < – Si teneis la entrada Pitch invertido sustituid este valor
-const int us_min_Pitch_adj = 30;    // < – por este y viceversa
 
-// AJUSTE MANDO RC - ROLL
-const float us_max_Roll_raw = 1960;
-const float us_min_Roll_raw = 992;
-const int us_max_Roll_adj = 30;     // < – Si teneis la entrada Roll invertido sustituid este valor
-const int us_min_Roll_adj = -30;    // < – por este y viceversa
-
-// AJUSTE MANDO RC - YAW
-const float us_max_Yaw_raw = 1928;
-const float us_min_Yaw_raw = 972;
-const int us_max_Yaw_adj = 30;      // < – Si teneis la entrada Yaw invertido sustituid este valor
-const int us_min_Yaw_adj = -30;     // < – por este y viceversa
-
-
-
-// INTERRUPCIÓN MANDO RC – > PITCH
-volatile long Pitch_HIGH_us;
-volatile int RC_Pitch_raw;
-void handler_channel_2() {
-  if (digitalRead(pin_INT_Pitch) == HIGH) Pitch_HIGH_us = micros();
-  if (digitalRead(pin_INT_Pitch) == LOW)  RC_Pitch_raw  = micros() - Pitch_HIGH_us;
-  channel_2 = map(RC_Pitch_raw, pitch_low, pitch_high, 2000, 1000);
-
+void read_RC() {
+  if (contador_flaco == 18) {
+    for (int i = 1; i <= numero_canales; i++) {
+      Mando_canal[i] = map(pulso_instante[2 * i] - pulso_instante[2 * i - 1], 600, 1600, 1000, 2000);
+    }
+  }
 }
 
-// INTERRUPCIÓN MANDO RC – > YAW
-volatile long Yaw_HIGH_us;
-volatile int RC_Yaw_raw;
-void handler_channel_4() {
-  if (digitalRead(pin_INT_Yaw) == HIGH) Yaw_HIGH_us = micros();
-  if (digitalRead(pin_INT_Yaw) == LOW)  RC_Yaw_raw  = micros() - Yaw_HIGH_us;
-  channel_4 = map(RC_Yaw_raw, yaw_low, yaw_high, 1000, 2000);
-}
-
-// INTERRUPCIÓN MANDO RC – > THROTTLE
-volatile long Throttle_HIGH_us;
-volatile int RC_Throttle_raw;
-void handler_channel_3() {
-  if (digitalRead(pin_INT_Throttle) == HIGH) Throttle_HIGH_us = micros();
-  if (digitalRead(pin_INT_Throttle) == LOW)  RC_Throttle_raw  = micros() - Throttle_HIGH_us;
-  channel_3 = map(RC_Throttle_raw, throttle_low, throttle_high, 2000, 1000);
-
-}
-
-// INTERRUPCIÓN MANDO RC – > ROLL
-volatile long Roll_HIGH_us;
-volatile int RC_Roll_raw;
-void handler_channel_1() {
-  if (digitalRead(pin_INT_Roll) == HIGH) Roll_HIGH_us = micros();
-  if (digitalRead(pin_INT_Roll) == LOW)  RC_Roll_raw  = micros() - Roll_HIGH_us;
-  channel_1 = map(RC_Roll_raw, roll_low, roll_high, 1000, 2000);
-
+void read_PPM() {
+  if (micros() - pulso_instante[contador_flaco - 1] > 2500) contador_flaco = 0;
+  pulso_instante[contador_flaco] = micros();
+  contador_flaco++;
 }

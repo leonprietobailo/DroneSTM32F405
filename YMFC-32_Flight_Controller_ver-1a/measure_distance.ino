@@ -50,6 +50,81 @@ void ultrasonicCorrection(){
   }
 }
 
+
+float pid_p_gain_AL = 10;
+float pid_i_gain_AL = 0;
+float pid_d_gain_AL = 0;
+
+
+float pid_i_mem_AL, pid_output_AL, pid_last_AL_d_error;
+float pid_max_AL = 200;
+
+void ultrasonicCorrectonV2() {
+
+  if (distance > 20){
+    startUltrasonic = true;
+  }
+  if(startUltrasonic){
+    if (throttle < 1400) {
+      performAutolanding = true;
+    }
+    else{
+      performAutolanding = false;
+    }
+  }
+  
+  if (performAutolanding && distance < 50){
+    // COMPUTE PIDs
+    pid_error_temp = -3 - velocity;
+    pid_i_mem_AL += pid_i_gain_AL * pid_error_temp;
+    if(pid_i_mem_AL > pid_max_AL)pid_i_mem_AL = pid_max_AL;
+    else if(pid_i_mem_AL < pid_max_AL * -1)pid_i_mem_AL = pid_max_AL * -1;
+  
+    pid_output_AL = pid_p_gain_AL * pid_error_temp + pid_i_mem_AL + pid_d_gain_AL * (pid_error_temp - pid_last_AL_d_error);
+    if(pid_output_AL > pid_max_AL)pid_output_AL = pid_max_AL;
+    else if(pid_output_AL < pid_max_AL * -1)pid_output_AL = pid_max_AL * -1;
+    pid_last_AL_d_error = pid_error_temp;
+    throttle = 1400 + pid_output_AL;
+  }  
+  else{
+    pid_last_AL_d_error = 0;
+    pid_output_AL = 0;
+    pid_i_mem_AL = 0;
+  }
+}
+
+void ultrasonicCorrectonV3() {
+  
+  if (distance >= 50){ // ADD START COMMAND
+    startUltrasonic = true;
+  }
+  if (startUltrasonic){
+    led_slow();
+    
+    if (distance < 50 && channel_3 < 1500) {
+      mappedThrottle = 1500 + map(distance, 50, 0, 0, 100);
+      throttle = mappedThrottle; //0.95 * throttle + 0.05 * mappedThrottle;
+      
+      if (channel_3 > 1000){
+        throttleTimer = millis();
+      }
+      
+      if (millis() - throttleTimer > 5000){
+        startUltrasonic = false;
+        performAutolanding = true;
+      }
+    }
+  }
+  if (performAutolanding){
+    throttle = mappedThrottle - 50;
+    led_fast();
+  }
+}
+
+
+unsigned long timeLast;
+float prevDistance;
+
 void echoPin_trigger(){
   if(pulseSent){
     if (digitalRead(echoPin) == HIGH){
@@ -59,13 +134,15 @@ void echoPin_trigger(){
       pulseEnd = micros();
       duration = pulseEnd - pulseStart;
       computedDistance = duration / 1e6 * cAir * 1e2 / 2.0;     // distance = duration [us] / 1e6 [us/s] * speedOfSound [m/s] * 1e2 [cm/m] / 2 (go and back] || [cm]
-//      if (computedDistance > 120){
-//        computedDistance = 120;
-//      }
+
       if (computedDistance < 10){
         computedDistance = 10;
       }
+      
+      prevDistance = distance;
       distance = 0.95 * distance + 0.05 * computedDistance;
+      velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6; 
+      timeLast = micros();
       pulseSent = false;
     }
   }
