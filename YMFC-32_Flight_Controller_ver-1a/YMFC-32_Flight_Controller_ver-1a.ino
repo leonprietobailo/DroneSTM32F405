@@ -391,13 +391,13 @@ void loop() {
   
 
   
-  //throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
-  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
-    throttle = Mando_canal[3] + takeoff_throttle;                                         //The base throttle is the receiver throttle channel + the detected take-off throttle.
+  throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
+//  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
+//    throttle = Mando_canal[3] + takeoff_throttle;                                         //The base throttle is the receiver throttle channel + the detected take-off throttle.
 //    if (flight_mode >= 2) {                                                          //If altitude mode is active.
 //      throttle = 1500 + takeoff_throttle + pid_output_altitude + manual_throttle;    //The base throttle is the receiver throttle channel + the detected take-off throttle + the PID controller output.
 //    }
-  }
+  //}
   measure_distance();
   //ultrasonicCorrection();
   //ultrasonicCorrectonV2();
