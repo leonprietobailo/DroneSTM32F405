@@ -27,6 +27,11 @@ uint64_t pulso_instante[numero_canales * 2 + 2];
 uint16_t Mando_canal[numero_canales];
 uint8_t contador_flaco = 1;
 
+///////////////////////////////////////////////////////////////////////////////////////
+//AUTO TAKE-OFF
+///////////////////////////////////////////////////////////////////////////////////////
+uint8_t takeoff_detected = 0;
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -103,11 +108,12 @@ uint8_t error, error_counter, error_led;
 
 
 int16_t esc_1, esc_2, esc_3, esc_4;
-int16_t throttle, cal_int;
+int16_t throttle, cal_int, takeoff_throttle;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
 int16_t gyro_pitch, gyro_roll, gyro_yaw;
 int16_t loop_counter;
+int32_t acc_z_average_short_total, acc_z_average_long_total, acc_z_average_total;
 
 int32_t channel_1_start, channel_1;
 int32_t channel_2_start, channel_2;
@@ -115,7 +121,7 @@ int32_t channel_3_start, channel_3;
 int32_t channel_4_start, channel_4;
 int32_t channel_5_start, channel_5;
 int32_t channel_6_start, channel_6;
-int32_t acc_total_vector;
+int32_t acc_total_vector, acc_total_vector_at_start;
 int32_t gyro_roll_cal, gyro_pitch_cal, gyro_yaw_cal;
 
 uint32_t loop_timer, error_timer;
@@ -278,6 +284,10 @@ void setup() {
 
   led_on();                                         //Turn on the green led.
   Serial.println("SETUP FINISHED");
+
+  acc_z_average_short_total = acc_z * 25;
+  acc_z_average_long_total = acc_z * 50;
+  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Main program loop
@@ -291,6 +301,7 @@ void loop() {
   
   PWM();
   read_RC();
+  process_RC();
   //error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
 
@@ -336,30 +347,7 @@ void loop() {
     roll_level_adjust = 0;                                                         //Set the roll angle correcion to zero.
   }
 
-  //For starting the motors: throttle low and yaw left (step 1).
-  if (Mando_canal[3] < 1050 && Mando_canal[4] < 1050)start = 1;
-  //When yaw stick is back in the center position start the motors (step 2).
-  if (start == 1 && Mando_canal[3] < 1050 && Mando_canal[4] > 1450) {
-    start = 2;
-
-    led_off();                                                                //Turn off the green led.
-
-    angle_pitch = angle_pitch_acc;                                                 //Set the gyro pitch angle equal to the accelerometer pitch angle when the quadcopter is started.
-    angle_roll = angle_roll_acc;                                                   //Set the gyro roll angle equal to the accelerometer roll angle when the quadcopter is started.
-
-    //Reset the PID controllers for a bumpless start.
-    pid_i_mem_roll = 0;
-    pid_last_roll_d_error = 0;
-    pid_i_mem_pitch = 0;
-    pid_last_pitch_d_error = 0;
-    pid_i_mem_yaw = 0;
-    pid_last_yaw_d_error = 0;
-  }
-  //Stopping the motors: throttle low and yaw right.
-  if (start == 2 && Mando_canal[3] < 1050 && Mando_canal[4] > 1950) {
-    start = 0;
-    led_on();                                                                 //Turn on the green led.
-  }
+  
 
   //The PID set point in degrees per second is determined by the roll receiver input.
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
@@ -402,13 +390,19 @@ void loop() {
   if (battery_voltage < 10.0 && error == 0)error = 1;
   
 
-  throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
   
+  //throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
+  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
+    throttle = Mando_canal[3] + takeoff_throttle;                                         //The base throttle is the receiver throttle channel + the detected take-off throttle.
+//    if (flight_mode >= 2) {                                                          //If altitude mode is active.
+//      throttle = 1500 + takeoff_throttle + pid_output_altitude + manual_throttle;    //The base throttle is the receiver throttle channel + the detected take-off throttle + the PID controller output.
+//    }
+  }
   measure_distance();
   //ultrasonicCorrection();
   //ultrasonicCorrectonV2();
-  ultrasonicCorrectonV3();
-  Serial.println(throttle);
+  //ultrasonicCorrectonV3();
+  //Serial.println(throttle);
   //Serial.println(velocity);
   
   
@@ -437,18 +431,18 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-  Serial.print(Mando_canal[1]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[2]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[3]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[4]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[5]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[6]);
-  Serial.print("\n");
+//  Serial.print(Mando_canal[1]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[2]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[3]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[4]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[5]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[6]);
+//  Serial.print("\n");
 
 //  Serial.print(esc_1);
 //  Serial.print("\t");
