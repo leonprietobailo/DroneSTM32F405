@@ -72,6 +72,12 @@ float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller 
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
+float pid_p_gain_altitude = 5;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_d_gain_altitude = 0;          //Gain setting for the altitude D-controller (default = 0.75).
+int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
+
+
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
 uint16_t throttle_high = 1826;             //Maximum Ch3 value
 uint16_t roll_low      = 1053;             //Minimum Ch1 value
@@ -131,6 +137,9 @@ float pid_error_temp;
 float pid_i_mem_roll, pid_roll_setpoint, gyro_roll_input, pid_output_roll, pid_last_roll_d_error;
 float pid_i_mem_pitch, pid_pitch_setpoint, gyro_pitch_input, pid_output_pitch, pid_last_pitch_d_error;
 float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_yaw_d_error;
+
+float pid_i_mem_altitude, pid_altitude_input, pid_output_altitude;
+
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
 
@@ -390,8 +399,13 @@ void loop() {
   if (battery_voltage < 10.0 && error == 0)error = 1;
   
 
-  
-  throttle = Mando_canal[3];                                                            //We need the throttle signal as a base signal.
+  if(Mando_canal[6] < 1500){
+    throttle = Mando_canal[3];  
+  }
+  else{
+    throttle = 1400 - pid_output_altitude;
+  }
+                                                            //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
 //    throttle = Mando_canal[3] + takeoff_throttle;                                         //The base throttle is the receiver throttle channel + the detected take-off throttle.
 //    if (flight_mode >= 2) {                                                          //If altitude mode is active.
@@ -468,8 +482,10 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  //Serial.println(distance);
-  
+  Serial.println(throttle);
+
+  //Serial.println(takeoff_throttle);
+  //Serial.println(start);
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:
