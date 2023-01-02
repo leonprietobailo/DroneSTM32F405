@@ -389,6 +389,7 @@ void loop() {
   }
 
   calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
+  altitude_pid();
 
   //The battery voltage is needed for compensation.
   //A complementary filter is used to reduce noise.
@@ -403,7 +404,7 @@ void loop() {
     throttle = Mando_canal[3];  
   }
   else{
-    throttle = 1400 - pid_output_altitude;
+    throttle = 1500 - pid_output_altitude;
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
@@ -499,7 +500,7 @@ void loop() {
   //the Q&A page:
   //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
-  if (micros() - loop_timer > 4050)error = 5;                                      //Turn on the LED if the loop time exceeds 4050us.
+  if (micros() - loop_timer > 4050)Serial.println("LOOP SLOW");                                      //Turn on the LED if the loop time exceeds 4050us.
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
   loop_timer = micros();                                                           //Set the timer for the next loop.
 }
