@@ -17,7 +17,28 @@
 
 //File dataFile;
 
+///////////////////////////////////////////////////////////////////////////////////////
+//GPS VARIABLES
+///////////////////////////////////////////////////////////////////////////////////////
 
+//GPS variables
+uint8_t read_serial_byte, incomming_message[100], number_used_sats, fix_type;
+uint8_t waypoint_set, latitude_north, longiude_east ;
+uint16_t message_counter;
+int16_t gps_add_counter;
+int32_t l_lat_gps, l_lon_gps, lat_gps_previous, lon_gps_previous;
+int32_t lat_gps_actual, lon_gps_actual, l_lat_waypoint, l_lon_waypoint;
+float gps_pitch_adjust_north, gps_pitch_adjust, gps_roll_adjust_north, gps_roll_adjust;
+float lat_gps_loop_add, lon_gps_loop_add, lat_gps_add, lon_gps_add;
+uint8_t new_line_found, new_gps_data_available, new_gps_data_counter;
+uint8_t gps_rotating_mem_location;
+int32_t gps_lat_total_avarage, gps_lon_total_avarage;
+int32_t gps_lat_rotating_mem[40], gps_lon_rotating_mem[40];
+int32_t gps_lat_error, gps_lon_error;
+int32_t gps_lat_error_previous, gps_lon_error_previous;
+uint32_t gps_watchdog_timer;
+int8_t flight_mode;
+float angle_yaw;
 ///////////////////////////////////////////////////////////////////////////////////////
 //RC
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -63,26 +84,39 @@ uint8_t takeoff_detected = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ROLL PID
+
 float pid_p_gain_roll = 0.8; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
 float pid_i_gain_roll = 0; //0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
 float pid_d_gain_roll = 4;               //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
+
+// PITCH PID
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
 float pid_i_gain_pitch = pid_i_gain_roll;  //Gain setting for the pitch I-controller.
 float pid_d_gain_pitch = pid_d_gain_roll;  //Gain setting for the pitch D-controller.
 int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controller (+/-).
 
+// YAW PID
+
 float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
 float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller (default = 0.02).
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
+
+// ALTITUDE PID
 
 float pid_p_gain_altitude = 5;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
 float pid_d_gain_altitude = 0;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
+// GPS PD
+
+float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
+float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controller (default = 6.5).
 
 uint16_t throttle_low  = 1140;             //Minimum Ch3 value
 uint16_t throttle_high = 1826;             //Maximum Ch3 value
@@ -144,7 +178,7 @@ float pid_i_mem_roll, pid_roll_setpoint, gyro_roll_input, pid_output_roll, pid_l
 float pid_i_mem_pitch, pid_pitch_setpoint, gyro_pitch_input, pid_output_pitch, pid_last_pitch_d_error;
 float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_yaw_d_error;
 
-float pid_i_mem_altitude, pid_altitude_input, pid_output_altitude;
+float pid_i_mem_altitude, pid_altitude_input, pid_output_altitude, pid_last_altitude_d_error;
 
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
@@ -410,7 +444,7 @@ void loop() {
     throttle = Mando_canal[3];  
   }
   else{
-    throttle = 1500 - pid_output_altitude;
+    throttle = 1450 - pid_output_altitude;
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.

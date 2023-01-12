@@ -71,9 +71,12 @@ void altitude_pid(){
   //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp_altitude.
   //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude (see above).
   //D = pid_d_gain_altitude * parachute_throttle.
-  pid_output_altitude = (pid_p_gain_altitude) * pid_error_temp_altitude + pid_i_mem_altitude; // + pid_d_gain_altitude * parachute_throttle;
+  pid_output_altitude = (pid_p_gain_altitude) * pid_error_temp_altitude + pid_i_mem_altitude + pid_d_gain_altitude * (pid_error_temp_altitude - pid_last_altitude_d_error); // + pid_d_gain_altitude * parachute_throttle;
+
   //To prevent extreme PID-output the output must be limited.
   if (pid_output_altitude > pid_max_altitude)pid_output_altitude = pid_max_altitude;
   else if (pid_output_altitude < pid_max_altitude * -1)pid_output_altitude = pid_max_altitude * -1;
+
+  pid_last_altitude_d_error = pid_error_temp_altitude;
   
 }
