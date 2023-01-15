@@ -52,7 +52,7 @@ void altitude_pid(){
 
   //Calculate the PID output of the altitude hold.
   pid_altitude_input = distance;                                          //Set the setpoint (pid_altitude_input) of the PID-controller.
-  pid_error_temp_altitude = pid_altitude_input - 45; // Setpoint                   //Calculate the error between the setpoint and the actual pressure value.
+  pid_error_temp_altitude = pid_altitude_input - 30; // Setpoint                   //Calculate the error between the setpoint and the actual pressure value.
 
   //To get better results the P-gain is increased when the error between the setpoint and the actual pressure value increases.
   //The variable pid_error_gain_altitude will be used to adjust the P-gain of the PID-controller.

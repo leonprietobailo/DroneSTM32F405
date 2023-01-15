@@ -108,9 +108,9 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 
 // ALTITUDE PID
 
-float pid_p_gain_altitude = 5;           //Gain setting for the altitude P-controller (default = 1.4).
-float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 0;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_d_gain_altitude = 0.75;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 // GPS PD
@@ -441,10 +441,12 @@ void loop() {
   
 
   if(Mando_canal[6] < 1500){
-    throttle = Mando_canal[3];  
+    throttle = Mando_canal[3];
+    pid_i_mem_altitude = 0;
+    pid_last_altitude_d_error= 0;
   }
   else{
-    throttle = 1450 - pid_output_altitude;
+    throttle = 1500 - pid_output_altitude;
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
@@ -498,7 +500,7 @@ void loop() {
 //  Serial.print("\t");
 //  Serial.print(Mando_canal[6]);
 //  Serial.print("\n");
-
+//
 //  Serial.print(esc_1);
 //  Serial.print("\t");
 //  Serial.print(esc_2);
@@ -523,7 +525,7 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  Serial.println(throttle);
+  Serial.println(distance);
 
   //Serial.println(takeoff_throttle);
   //Serial.println(start);
