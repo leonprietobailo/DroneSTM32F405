@@ -63,8 +63,8 @@ void altitude_pid(){
 //  }
 
 
-  increasing_P_gain_altitude = 0.08 * abs(pid_error_temp_altitude) + 1.4;
-  if (increasing_P_gain_altitude > 3)increasing_P_gain_altitude = 3;
+  increasing_P_gain_altitude = 0.05 * abs(pid_error_temp_altitude) + pid_p_gain_altitude;
+  if (increasing_P_gain_altitude > 1.5)increasing_P_gain_altitude = 1.5;
   
 
   //In the following section the I-output is calculated. It's an accumulation of errors over time.
@@ -76,7 +76,7 @@ void altitude_pid(){
   //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp_altitude.
   //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude (see above).
   //D = pid_d_gain_altitude * parachute_throttle.
-  pid_output_altitude = (increasing_P_gain_altitude) * pid_error_temp_altitude + pid_i_mem_altitude + pid_d_gain_altitude * (pid_error_temp_altitude - pid_last_altitude_d_error); // + pid_d_gain_altitude * parachute_throttle;
+  pid_output_altitude = (pid_p_gain_altitude) * pid_error_temp_altitude + pid_i_mem_altitude + pid_d_gain_altitude * (pid_error_temp_altitude - pid_last_altitude_d_error); // + pid_d_gain_altitude * parachute_throttle;
 
   //To prevent extreme PID-output the output must be limited.
   if (pid_output_altitude > pid_max_altitude)pid_output_altitude = pid_max_altitude;

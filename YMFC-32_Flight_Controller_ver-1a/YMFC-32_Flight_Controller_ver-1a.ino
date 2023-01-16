@@ -108,9 +108,9 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 
 // ALTITUDE PID
 
-float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
-float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 0.75;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_p_gain_altitude = 0.5;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_d_gain_altitude = 1.5;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 // GPS PD
@@ -446,7 +446,7 @@ void loop() {
     pid_last_altitude_d_error= 0;
   }
   else{
-    throttle = 1500 - pid_output_altitude;
+    throttle = 1520 - pid_output_altitude;    // 1520 is perfect for 11.3V
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
