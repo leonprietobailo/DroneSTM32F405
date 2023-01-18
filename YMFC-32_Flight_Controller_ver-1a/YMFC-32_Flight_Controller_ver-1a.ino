@@ -347,7 +347,7 @@ void loop() {
 //  testString += String(throttle);
 //  dataFile.println(testString);
 //  dataFile.flush();
-  
+  battery_control();
   PWM();
   read_RC();
   process_RC();
@@ -434,7 +434,7 @@ void loop() {
   //The battery voltage is needed for compensation.
   //A complementary filter is used to reduce noise.
   //1410.1 = 112.81 / 0.08.
-  battery_voltage = battery_voltage * 0.92 + ((float)analogRead(4) / 1410.1);
+  battery_voltage = battery_voltage * 0.92 + ((float)analogRead(PA7) / 352.27);
 
   //Turn on the led if battery voltage is to low. In this case under 10.0V
   if (battery_voltage < 10.0 && error == 0)error = 1;
