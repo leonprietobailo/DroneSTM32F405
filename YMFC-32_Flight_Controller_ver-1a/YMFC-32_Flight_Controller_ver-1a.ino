@@ -446,7 +446,7 @@ void loop() {
     pid_last_altitude_d_error= 0;
   }
   else{
-    throttle = 1520 - pid_output_altitude;    // 1520 is perfect for 11.3V
+    throttle = 1480 - pid_output_altitude;    // 1520 is perfect for 11.3V
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
@@ -488,18 +488,18 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-//  Serial.print(Mando_canal[1]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[2]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[3]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[4]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[5]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[6]);
-//  Serial.print("\n");
+  Serial.print(Mando_canal[1]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[2]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[3]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[4]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[5]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[6]);
+  Serial.print("\n");
 //
 //  Serial.print(esc_1);
 //  Serial.print("\t");
@@ -525,7 +525,7 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  Serial.println(distance);
+  //Serial.println(distance);
 
   //Serial.println(takeoff_throttle);
   //Serial.println(start);

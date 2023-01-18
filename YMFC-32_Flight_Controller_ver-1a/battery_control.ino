@@ -12,9 +12,9 @@ void battery_control(void) {
 void buzzer(void){
 	
 	if (battery_voltage <= 10.5){					// If battery below 10.5 V -> Permanent Buzzer Sound
-		//tone(pin_BUZZER, 2500);
+		tone(pin_BUZZER, 2500);
 	}
-	else if (battery_voltage <= 13){					// If battery below 11 V -> Buzzer sounds twice per second
+	else if (battery_voltage <= 11.2){					// If battery below 11 V -> Buzzer sounds twice per second
 		if (micros() - buzzerTimer > 0.25e6){		// If quarter of a second passed (25000 us), change status of buzzer.
 			if (toneOn){
 				noTone(pin_BUZZER);
