@@ -102,7 +102,7 @@ int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controlle
 // YAW PID
 
 float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
-float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller (default = 0.02).
+float pid_i_gain_yaw = 0; //0.01;          //Gain setting for the pitch I-controller (default = 0.02).
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
@@ -155,6 +155,7 @@ uint8_t error, error_counter, error_led;
 
 int16_t esc_1, esc_2, esc_3, esc_4;
 int16_t throttle, cal_int, takeoff_throttle;
+float hoverThrottle;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
 int16_t gyro_pitch, gyro_roll, gyro_yaw;
@@ -446,7 +447,8 @@ void loop() {
     pid_last_altitude_d_error= 0;
   }
   else{
-    throttle = 1480 - pid_output_altitude;    // 1520 is perfect for 11.3V
+    hoverThrottle = - 40.0 / 0.95 * battery_voltage + 1995.79;
+    throttle = hoverThrottle - pid_output_altitude;   
   }
                                                             //We need the throttle signal as a base signal.
 //  if (takeoff_detected == 1 && start == 2) {                                         //If the quadcopter is started and flying.
@@ -488,18 +490,18 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-  Serial.print(Mando_canal[1]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[2]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[3]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[4]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[5]);
-  Serial.print("\t");
-  Serial.print(Mando_canal[6]);
-  Serial.print("\n");
+//  Serial.print(Mando_canal[1]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[2]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[3]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[4]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[5]);
+//  Serial.print("\t");
+//  Serial.print(Mando_canal[6]);
+//  Serial.print("\n");
 //
 //  Serial.print(esc_1);
 //  Serial.print("\t");
@@ -525,7 +527,7 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  //Serial.println(distance);
+  Serial.println(hoverThrottle);
 
   //Serial.println(takeoff_throttle);
   //Serial.println(start);
