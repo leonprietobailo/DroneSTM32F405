@@ -102,15 +102,15 @@ int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controlle
 // YAW PID
 
 float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
-float pid_i_gain_yaw = 0; //0.01;          //Gain setting for the pitch I-controller (default = 0.02).
+float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller (default = 0.02).
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
 // ALTITUDE PID
 
-float pid_p_gain_altitude = 0.5;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_p_gain_altitude = 0.25;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 1.5;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_d_gain_altitude = 0; //1.5;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 // GPS PD
@@ -447,7 +447,7 @@ void loop() {
     pid_last_altitude_d_error= 0;
   }
   else{
-    hoverThrottle = - 40.0 / 0.95 * battery_voltage + 1995.79;
+    hoverThrottle = - 52.6316 * battery_voltage + 2074.74;
     throttle = hoverThrottle - pid_output_altitude;   
   }
                                                             //We need the throttle signal as a base signal.
