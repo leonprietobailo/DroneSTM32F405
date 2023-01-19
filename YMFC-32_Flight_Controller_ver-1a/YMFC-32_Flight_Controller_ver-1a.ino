@@ -108,9 +108,9 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 
 // ALTITUDE PID
 
-float pid_p_gain_altitude = 0.25;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_p_gain_altitude = 1;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 0; //1.5;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_d_gain_altitude = 5;// 9.5;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 // GPS PD
@@ -447,7 +447,7 @@ void loop() {
     pid_last_altitude_d_error= 0;
   }
   else{
-    hoverThrottle = - 52.6316 * battery_voltage + 2074.74;
+    hoverThrottle = - 52.6316 * battery_voltage + 2084.74;
     throttle = hoverThrottle - pid_output_altitude;   
   }
                                                             //We need the throttle signal as a base signal.
@@ -527,8 +527,8 @@ void loop() {
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
  
-  Serial.println(hoverThrottle);
-
+  //Serial.println(hoverThrottle);
+  Serial.println(distance);
   //Serial.println(takeoff_throttle);
   //Serial.println(start);
   
