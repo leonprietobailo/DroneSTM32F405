@@ -6,7 +6,7 @@ bool toneOn;
 
 void battery_control(void) {
 	//batteryVoltage = (float)analogRead(pin_BAT) / 112.81;
-	buzzer();
+	//buzzer();
 }
 
 void buzzer(void){

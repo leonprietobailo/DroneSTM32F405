@@ -16,8 +16,9 @@ void gyro_signalen(void) {
   //gyro_pitch *= -1;                                          //Invert the direction of the axis.
   gyro_roll *= -1;
   gyro_yaw *= -1;                                            //Invert the direction of the axis.
-  acc_x -= manual_acc_pitch_cal_value;                       //Subtact the manual accelerometer pitch calibration value.
-  acc_y -= manual_acc_roll_cal_value;                        //Subtact the manual accelerometer roll calibration value.
+  acc_x -= manual_x_cal_value;                       //Subtact the manual accelerometer pitch calibration value.
+  acc_y -= manual_y_cal_value;                        //Subtact the manual accelerometer roll calibration value.
+  acc_z -= manual_z_cal_value;
   gyro_roll -= manual_gyro_roll_cal_value;                   //Subtact the manual gyro roll calibration value.
   gyro_pitch -= manual_gyro_pitch_cal_value;                 //Subtact the manual gyro pitch calibration value.
   gyro_yaw -= manual_gyro_yaw_cal_value;                     //Subtact the manual gyro yaw calibration value.

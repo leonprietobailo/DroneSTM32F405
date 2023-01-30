@@ -8,14 +8,13 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-//SD CARD
+//FLASH STORAGE
 ///////////////////////////////////////////////////////////////////////////////////////
 
-//#ifndef SD_DETECT_PIN
-//#define SD_DETECT_PIN SD_DETECT_NONE
-//#endif
-
-//File dataFile;
+#define length_str 20000
+uint16_t voltage_str[length_str];
+uint16_t throttle_str[length_str];
+uint16_t n_str = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //GPS VARIABLES
@@ -139,6 +138,9 @@ uint8_t use_manual_calibration = false;    // Set to false or true;
 int16_t manual_gyro_pitch_cal_value = 0;
 int16_t manual_gyro_roll_cal_value = 0;
 int16_t manual_gyro_yaw_cal_value = 0;
+int16_t manual_x_cal_value = 0;
+int16_t manual_y_cal_value = 0;
+int16_t manual_z_cal_value = 0;
 
 uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
 
@@ -154,7 +156,7 @@ uint8_t error, error_counter, error_led;
 
 
 int16_t esc_1, esc_2, esc_3, esc_4;
-int16_t throttle, cal_int, takeoff_throttle;
+int16_t throttle, cal_int, hover_throttle, takeoff_throttle;
 float hoverThrottle;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
@@ -170,6 +172,7 @@ int32_t channel_5_start, channel_5;
 int32_t channel_6_start, channel_6;
 int32_t acc_total_vector, acc_total_vector_at_start;
 int32_t gyro_roll_cal, gyro_pitch_cal, gyro_yaw_cal;
+int32_t acc_x_cal, acc_y_cal, acc_z_cal;
 
 uint32_t loop_timer, error_timer;
 
@@ -202,25 +205,15 @@ float battery_voltage;
 
 float distance;
 float velocity;
-//String testString;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
   delay(5000);
 
-  // SD CARD
-  //while (!SD.begin(SD_DETECT_PIN))
-  //{
-  //  delay(10);
-  //}
-  //dataFile = SD.open("log.txt", FILE_WRITE);
-  //if (dataFile) {
-  //  dataFile.seek(dataFile.size());
-  //}
-  //else {
-  //  Serial.println("error opening datalog.txt");
-  //}
+  //INTERNAL FLASH SETUP
+  flash_setup();
 
 // Green LED
   pinMode(PC1, OUTPUT);
@@ -343,17 +336,15 @@ void setup() {
 //Main program loop
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
-//  testString = String(millis());
-//  testString += " ";
-//  testString += String(throttle);
-//  dataFile.println(testString);
-//  dataFile.flush();
+
   battery_control();
   PWM();
   read_RC();
   process_RC();
+  //compute_hover_throttle();
   //error_signal();                                                                  //Show the errors via the red LED.
   gyro_signalen();                                                                 //Read the gyro and accelerometer data.
+  flash_write();
 
   //65.5 = 1 deg/sec (check the datasheet of the MPU-6050 for more information).
   gyro_roll_input = (gyro_roll_input * 0.7) + (((float)gyro_roll / 65.5) * 0.3);   //Gyro pid input is deg/sec.
@@ -435,7 +426,7 @@ void loop() {
   //The battery voltage is needed for compensation.
   //A complementary filter is used to reduce noise.
   //1410.1 = 112.81 / 0.08.
-  battery_voltage = battery_voltage * 0.92 + ((float)analogRead(PA7) / 352.27);
+  battery_voltage = battery_voltage * 0.92 + ((float)analogRead(PA7) / 352.27*0.9838);
 
   //Turn on the led if battery voltage is to low. In this case under 10.0V
   if (battery_voltage < 10.0 && error == 0)error = 1;
@@ -445,9 +436,10 @@ void loop() {
     throttle = Mando_canal[3];
     pid_i_mem_altitude = 0;
     pid_last_altitude_d_error= 0;
+    
   }
   else{
-    hoverThrottle = - 52.6316 * battery_voltage + 2084.74;
+    hoverThrottle = -63.4 * battery_voltage + 2153;
     throttle = hoverThrottle - pid_output_altitude;   
   }
                                                             //We need the throttle signal as a base signal.
@@ -512,6 +504,12 @@ void loop() {
 //  Serial.print(esc_4);
 //  Serial.print("\n");
 
+//    Serial.print(acc_x_cal);
+//    Serial.print("\t");
+//    Serial.print(acc_y_cal);
+//    Serial.print("\t");
+//    Serial.print(acc_z_cal);
+//    Serial.print("\t");
 //    Serial.print(acc_x);
 //    Serial.print("\t");
 //    Serial.print(acc_y);
@@ -526,11 +524,13 @@ void loop() {
 //    Serial.print("\t");
 //    Serial.print(gyro_yaw);
 //    Serial.print("\n");
+
  
   //Serial.println(hoverThrottle);
-  Serial.println(distance);
+
   //Serial.println(takeoff_throttle);
   //Serial.println(start);
+  //Serial.println(battery_voltage);
   
   ////////////////////////////////////////////////////////////////////////////////////////////////////
   //Creating the pulses for the ESC's is explained in this video:
@@ -544,7 +544,12 @@ void loop() {
   //the Q&A page:
   //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
-  if (micros() - loop_timer > 4050)Serial.println("LOOP SLOW");                                      //Turn on the LED if the loop time exceeds 4050us.
+  Serial.println(micros() - loop_timer);
+  if (micros() - loop_timer > 4050){
+    Serial.print("LOOP SLOW");                                      //Turn on the LED if the loop time exceeds 4050us.
+    Serial.print("\t");
+    
+  }
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
   loop_timer = micros();                                                           //Set the timer for the next loop.
 }

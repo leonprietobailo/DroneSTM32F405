@@ -65,7 +65,7 @@ void altitude_pid(){
 
   increasing_P_gain_altitude = 0.025 * abs(pid_error_temp_altitude);
   if (increasing_P_gain_altitude > 1.5)increasing_P_gain_altitude = 1.5;
-  increasing_P_gain_altitude=0;
+  increasing_P_gain_altitude = 0;
   
 
   //In the following section the I-output is calculated. It's an accumulation of errors over time.

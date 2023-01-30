@@ -18,6 +18,9 @@ void calibrate_gyro(void) {
       gyro_roll_cal += gyro_roll;                                                     //Ad roll value to gyro_roll_cal.
       gyro_pitch_cal += gyro_pitch;                                                   //Ad pitch value to gyro_pitch_cal.
       gyro_yaw_cal += gyro_yaw;                                                       //Ad yaw value to gyro_yaw_cal.
+      acc_x_cal += acc_x;
+      acc_y_cal += acc_y;
+      acc_z_cal += acc_z;
       delay(4);                                                                       //Small delay to simulate a 250Hz loop during calibration.
     }
     //red_led(HIGH);                                                                     //Set output PB3 low.
@@ -25,8 +28,14 @@ void calibrate_gyro(void) {
     gyro_roll_cal /= 2000;                                                            //Divide the roll total by 2000.
     gyro_pitch_cal /= 2000;                                                           //Divide the pitch total by 2000.
     gyro_yaw_cal /= 2000;                                                             //Divide the yaw total by 2000.
+    acc_x_cal /= 2000;
+    acc_y_cal /= 2000;
+    acc_z_cal /= 2000;    
     manual_gyro_pitch_cal_value = gyro_pitch_cal;                                     //Set the manual pitch calibration variable to the detected value.
     manual_gyro_roll_cal_value = gyro_roll_cal;                                       //Set the manual roll calibration variable to the detected value.
     manual_gyro_yaw_cal_value = gyro_yaw_cal;                                         //Set the manual yaw calibration variable to the detected value.
+    manual_x_cal_value = acc_x_cal;
+    manual_y_cal_value = acc_y_cal;
+    manual_z_cal_value = acc_z_cal - 4096;
   }
 }
