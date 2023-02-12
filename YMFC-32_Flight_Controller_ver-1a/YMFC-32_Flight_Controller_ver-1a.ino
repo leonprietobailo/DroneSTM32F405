@@ -86,10 +86,12 @@ uint8_t takeoff_detected = 0;
 
 // ROLL PID
 
-float pid_p_gain_roll = 0.8; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0; //0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_p_gain_roll = 0.9; //.6;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_i_gain_roll = 0.009; //0.0075; //0.001;        //Gain setting for the pitch and roll I-controller (default = 0.04).
 float pid_d_gain_roll = 4;               //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
+
+float pid_i_gain_roll_in = 0;
 
 // PITCH PID
 
@@ -98,6 +100,8 @@ float pid_i_gain_pitch = pid_i_gain_roll;  //Gain setting for the pitch I-contro
 float pid_d_gain_pitch = pid_d_gain_roll;  //Gain setting for the pitch D-controller.
 int pid_max_pitch = pid_max_roll;          //Maximum output of the PID-controller (+/-).
 
+float pid_i_gain_pitch_in = 0;
+
 // YAW PID
 
 float pid_p_gain_yaw = 0.75;               //Gain setting for the pitch P-controller (default = 4.0).
@@ -105,11 +109,13 @@ float pid_i_gain_yaw = 0.01;          //Gain setting for the pitch I-controller 
 float pid_d_gain_yaw = 0;                  //Gain setting for the pitch D-controller (default = 0.0).
 int pid_max_yaw = 400;                     //Maximum output of the PID-controller (+/-).
 
+float pid_i_gain_yaw_in = 0;
+
 // ALTITUDE PID
 
 float pid_p_gain_altitude = 1;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 5;// 9.5;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_d_gain_altitude = 15;// 9.5;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 // GPS PD
@@ -394,8 +400,8 @@ void loop() {
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_roll_setpoint = 0;
   //We need a little dead band of 16us for better results.
-  if (Mando_canal[1] > 1508)pid_roll_setpoint = Mando_canal[1] - 1508;
-  else if (Mando_canal[1] < 1492)pid_roll_setpoint = Mando_canal[1] - 1492;
+  if (Mando_canal[1] > 1501)pid_roll_setpoint = Mando_canal[1] - 1501;
+  else if (Mando_canal[1] < 1499)pid_roll_setpoint = Mando_canal[1] - 1499;
 
   pid_roll_setpoint -= roll_level_adjust;                                          //Subtract the angle correction from the standardized receiver roll input value.
   pid_roll_setpoint /= 3.0;                                                        //Divide the setpoint for the PID roll controller by 3 to get angles in degrees.
@@ -405,8 +411,8 @@ void loop() {
   //In the case of deviding by 3 the max pitch rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_pitch_setpoint = 0;
   //We need a little dead band of 16us for better results.
-  if (Mando_canal[2] > 1508)pid_pitch_setpoint = Mando_canal[2] - 1508;
-  else if (Mando_canal[2] < 1492)pid_pitch_setpoint = Mando_canal[2] - 1492;
+  if (Mando_canal[2] > 1501)pid_pitch_setpoint = Mando_canal[2] - 1501;
+  else if (Mando_canal[2] < 1499)pid_pitch_setpoint = Mando_canal[2] - 1499;
 
   pid_pitch_setpoint -= pitch_level_adjust;                                        //Subtract the angle correction from the standardized receiver pitch input value.
   pid_pitch_setpoint /= 3.0;                                                       //Divide the setpoint for the PID pitch controller by 3 to get angles in degrees.
@@ -416,8 +422,8 @@ void loop() {
   pid_yaw_setpoint = 0;
   //We need a little dead band of 16us for better results.
   if (Mando_canal[3] > 1050) { //Do not yaw when turning off the motors.
-    if (Mando_canal[4] > 1508)pid_yaw_setpoint = (Mando_canal[4] - 1508) / 3.0;
-    else if (Mando_canal[4] < 1492)pid_yaw_setpoint = (Mando_canal[4] - 1492) / 3.0;
+    if (Mando_canal[4] > 1550)pid_yaw_setpoint = (Mando_canal[4] - 1550) / 3.0;
+    else if (Mando_canal[4] < 1450)pid_yaw_setpoint = (Mando_canal[4] - 1450) / 3.0;
   }
 
   calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
@@ -439,7 +445,7 @@ void loop() {
     
   }
   else{
-    hoverThrottle = -63.4 * battery_voltage + 2153;
+    hoverThrottle = -63.4 * battery_voltage + 2183;
     throttle = hoverThrottle - pid_output_altitude;   
   }
                                                             //We need the throttle signal as a base signal.
@@ -482,18 +488,18 @@ void loop() {
     esc_4 = 1000;                                                                  //If start is not 2 keep a 1000us pulse for ess-4.
   }
 
-//  Serial.print(Mando_canal[1]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[2]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[3]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[4]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[5]);
-//  Serial.print("\t");
-//  Serial.print(Mando_canal[6]);
-//  Serial.print("\n");
+  Serial.print(Mando_canal[1]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[2]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[3]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[4]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[5]);
+  Serial.print("\t");
+  Serial.print(Mando_canal[6]);
+  Serial.print("\n");
 //
 //  Serial.print(esc_1);
 //  Serial.print("\t");
@@ -544,7 +550,7 @@ void loop() {
   //the Q&A page:
   //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 
-  Serial.println(micros() - loop_timer);
+  //Serial.println(micros() - loop_timer);
   if (micros() - loop_timer > 4050){
     Serial.print("LOOP SLOW");                                      //Turn on the LED if the loop time exceeds 4050us.
     Serial.print("\t");

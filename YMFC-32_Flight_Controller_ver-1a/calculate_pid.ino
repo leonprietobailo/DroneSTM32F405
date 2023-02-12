@@ -6,8 +6,15 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void calculate_pid(void){
   //Roll calculations
+  if (distance > 15){
+    pid_i_gain_roll_in = pid_i_gain_roll;
+  }
+  else{
+    pid_i_gain_roll_in = 0;
+    pid_i_mem_roll = 0;
+  }
   pid_error_temp = gyro_roll_input - pid_roll_setpoint;
-  pid_i_mem_roll += pid_i_gain_roll * pid_error_temp;
+  pid_i_mem_roll += pid_i_gain_roll_in * pid_error_temp;
   if(pid_i_mem_roll > pid_max_roll)pid_i_mem_roll = pid_max_roll;
   else if(pid_i_mem_roll < pid_max_roll * -1)pid_i_mem_roll = pid_max_roll * -1;
 
@@ -18,8 +25,15 @@ void calculate_pid(void){
   pid_last_roll_d_error = pid_error_temp;
 
   //Pitch calculations
+  if (distance > 15){
+    pid_i_gain_pitch_in = pid_i_gain_pitch;
+  }
+  else{
+    pid_i_gain_pitch_in = 0;
+    pid_i_mem_pitch = 0;
+  }
   pid_error_temp = gyro_pitch_input - pid_pitch_setpoint;
-  pid_i_mem_pitch += pid_i_gain_pitch * pid_error_temp;
+  pid_i_mem_pitch += pid_i_gain_pitch_in * pid_error_temp;
   if(pid_i_mem_pitch > pid_max_pitch)pid_i_mem_pitch = pid_max_pitch;
   else if(pid_i_mem_pitch < pid_max_pitch * -1)pid_i_mem_pitch = pid_max_pitch * -1;
 
@@ -30,8 +44,15 @@ void calculate_pid(void){
   pid_last_pitch_d_error = pid_error_temp;
 
   //Yaw calculations
+  if (distance > 15){
+    pid_i_gain_yaw_in = pid_i_gain_yaw;
+  }
+  else{
+    pid_i_gain_yaw_in = 0;
+    pid_i_mem_yaw = 0;
+  }
   pid_error_temp = gyro_yaw_input - pid_yaw_setpoint;
-  pid_i_mem_yaw += pid_i_gain_yaw * pid_error_temp;
+  pid_i_mem_yaw += pid_i_gain_yaw_in * pid_error_temp;
   if(pid_i_mem_yaw > pid_max_yaw)pid_i_mem_yaw = pid_max_yaw;
   else if(pid_i_mem_yaw < pid_max_yaw * -1)pid_i_mem_yaw = pid_max_yaw * -1;
 

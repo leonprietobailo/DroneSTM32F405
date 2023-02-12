@@ -140,7 +140,7 @@ void echoPin_trigger(){
       }
       if (computedDistance < 200){
         prevDistance = distance;
-        distance = 0.95 * distance + 0.05 * computedDistance;
+        distance = computedDistance; //0.95 * distance + 0.05 * computedDistance;
         velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6; 
         timeLast = micros();
       }
