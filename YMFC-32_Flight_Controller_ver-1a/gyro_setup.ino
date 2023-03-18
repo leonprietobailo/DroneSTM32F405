@@ -22,3 +22,14 @@ void gyro_setup(void){
   Wire.write(0x03);                                            //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz).
   Wire.endTransmission();                                      //End the transmission with the gyro.
 }
+
+void gyro_search(){
+  Wire.begin();                                                //Start the I2C as master
+  Wire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
+  error = Wire.endTransmission();                              //End the transmission and register the exit status.
+  while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.
+    error = 2;                                                  //Set the error status to 2.
+    //error_signal();                                             //Show the error via the red LED.
+    delay(4);
+  }
+}

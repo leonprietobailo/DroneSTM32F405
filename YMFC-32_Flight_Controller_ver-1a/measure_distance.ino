@@ -4,6 +4,14 @@ bool pulseSent;
 // Air temperature linear aproximation, temeprature to be replaced with vlaue obtainted from MPU6050
 long cAir = 331.3 + 20.0 * 0.606;     
 
+
+void ultrasonic_setup(){
+  pinMode(triggerPin, OUTPUT); // Sets the trigPin as an OUTPUT
+  digitalWrite(triggerPin, LOW);
+  pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
+  attachInterrupt(digitalPinToInterrupt(echoPin), echoPin_trigger, CHANGE);
+}
+
 void measure_distance(){
   if (micros() - sentLastPulse > 7500){
     sentLastPulse = micros();

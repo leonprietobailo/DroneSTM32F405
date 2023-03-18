@@ -11,6 +11,10 @@
 
 volatile long led_timer;
 
+void led_setup(){
+  pinMode(PC1, OUTPUT);
+}
+
 // LED ON
 void led_on() {
 	digitalWrite(PC1, HIGH);

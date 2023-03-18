@@ -5,8 +5,13 @@ int buzzerTimer;
 bool toneOn;
 
 void battery_control(void) {
-	//batteryVoltage = (float)analogRead(pin_BAT) / 112.81;
-	//buzzer();
+	//The battery voltage is needed for compensation.
+  //A complementary filter is used to reduce noise.
+  //1410.1 = 112.81 / 0.08.
+  battery_voltage = battery_voltage * 0.92 + ((float)analogRead(PA7) / 352.27*0.9838);
+
+  //Turn on the led if battery voltage is to low. In this case under 10.0V
+  if (battery_voltage < 10.0 && error == 0)error = 1;
 }
 
 void buzzer(void){

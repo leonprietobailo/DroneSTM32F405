@@ -4,6 +4,43 @@
 //The PID controllers are explained in part 5 of the YMFC-3D video session:
 //https://youtu.be/JBvnB0279-Q 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void pid_attitude_sp(){
+  //The PID set point in degrees per second is determined by the roll receiver input.
+  //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_roll_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (Mando_canal[1] > 1501)pid_roll_setpoint = Mando_canal[1] - 1501;
+  else if (Mando_canal[1] < 1499)pid_roll_setpoint = Mando_canal[1] - 1499;
+
+  pid_roll_setpoint -= roll_level_adjust;                                          //Subtract the angle correction from the standardized receiver roll input value.
+  pid_roll_setpoint /= 3.0;                                                        //Divide the setpoint for the PID roll controller by 3 to get angles in degrees.
+
+
+  //The PID set point in degrees per second is determined by the pitch receiver input.
+  //In the case of deviding by 3 the max pitch rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_pitch_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (Mando_canal[2] > 1501)pid_pitch_setpoint = Mando_canal[2] - 1501;
+  else if (Mando_canal[2] < 1499)pid_pitch_setpoint = Mando_canal[2] - 1499;
+
+  pid_pitch_setpoint -= pitch_level_adjust;                                        //Subtract the angle correction from the standardized receiver pitch input value.
+  pid_pitch_setpoint /= 3.0;                                                       //Divide the setpoint for the PID pitch controller by 3 to get angles in degrees.
+
+  //The PID set point in degrees per second is determined by the yaw receiver input.
+  //In the case of deviding by 3 the max yaw rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
+  pid_yaw_setpoint = 0;
+  //We need a little dead band of 16us for better results.
+  if (Mando_canal[3] > 1050) { //Do not yaw when turning off the motors.
+    if (Mando_canal[4] > 1550)pid_yaw_setpoint = (Mando_canal[4] - 1550) / 3.0;
+    else if (Mando_canal[4] < 1450)pid_yaw_setpoint = (Mando_canal[4] - 1450) / 3.0;
+  }
+}
+
+
+
+
+
 void calculate_pid(void){
   //Roll calculations
   if (distance > 15){

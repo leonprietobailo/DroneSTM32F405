@@ -1,4 +1,7 @@
-
+void rc_setup(){
+  pinMode(pin_PPM, INPUT);                   // YAW
+  attachInterrupt(digitalPinToInterrupt(pin_PPM), read_PPM, CHANGE);
+}
 void read_RC() {
   if (contador_flaco == 18) {
     for (int i = 1; i <= numero_canales; i++) {
