@@ -102,7 +102,7 @@ void calculate_pid(void){
 
 
 
-float pid_error_temp_altitude, increasing_P_gain_altitude;
+float pid_error_temp_altitude, pid_error_temp_altitude_v2, increasing_P_gain_altitude;
 
 void altitude_pid(){
     // Altitude calculations
@@ -142,4 +142,37 @@ void altitude_pid(){
   else if (pid_output_altitude < pid_max_altitude * -1)pid_output_altitude = pid_max_altitude * -1;
 
   pid_last_altitude_d_error = pid_error_temp_altitude;
+}
+
+void altitude_pid_v2(){
+
+  pid_altitude_v2_input = distance;                           // Measurements comming from sensor [cm]              
+  pid_error_temp_altitude_v2 = pid_altitude_v2_input - 45;    // Control error signal generation. Meas - Reference.
+
+ 
+
+  //In the following section the I-output is calculated. It's an accumulation of errors over time.
+  //The time factor is removed as the program loop runs at 250Hz.
+  pid_i_mem_altitude_v2 += (pid_i_gain_altitude_v2 / 100.0) * pid_error_temp_altitude_v2;
+  if (pid_i_mem_altitude_v2 > pid_max_altitude_v2)pid_i_mem_altitude_v2 = pid_max_altitude_v2;
+  else if (pid_i_mem_altitude_v2 < pid_max_altitude_v2 * -1)pid_i_mem_altitude_v2 = pid_max_altitude_v2 * -1;
+  
+  //In the following line the PID-output is calculated.
+  //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp_altitude.
+  //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude (see above).
+  //D = pid_d_gain_altitude * parachute_throttle.
+  pid_output_altitude_v2 = (pid_p_gain_altitude_v2) * pid_error_temp_altitude_v2 + pid_i_mem_altitude_v2 + pid_d_gain_altitude_v2 * (pid_error_temp_altitude_v2 - pid_last_altitude_v2_d_error); // + pid_d_gain_altitude * parachute_throttle;
+
+  //To prevent extreme PID-output the output must be limited.
+  //if (pid_output_altitude_v2 > pid_max_altitude_v2)pid_output_altitude_v2 = pid_max_altitude_v2;
+  //else if (pid_output_altitude_v2 < pid_max_altitude_v2 * -1)pid_output_altitude_v2 = pid_max_altitude_v2 * -1;
+
+  pid_last_altitude_v2_d_error = pid_error_temp_altitude_v2;
+  
+  throttle_ah -= pid_output_altitude_v2;
+
+  
+  
+
+  
 }

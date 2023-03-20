@@ -119,19 +119,26 @@ float pid_i_gain_altitude = 0;           //Gain setting for the altitude I-contr
 float pid_d_gain_altitude = 15;// 9.5;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
+// ALTITUDE PID V2
+
+float pid_p_gain_altitude_v2 = 0.0005;      //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude_v2 = 0;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_d_gain_altitude_v2 = 0;           //Gain setting for the altitude D-controller (default = 0.75).
+int pid_max_altitude_v2 = 400;  
+
 // GPS PD
 
 float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
 float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controller (default = 6.5).
 
-uint16_t throttle_low  = 1140;             //Minimum Ch3 value
-uint16_t throttle_high = 1826;             //Maximum Ch3 value
-uint16_t roll_low      = 1053;             //Minimum Ch1 value
-uint16_t roll_high     = 1952;             //Maximum Ch1 value
-uint16_t pitch_low     = 1076;             //Minimum Ch2 value
-uint16_t pitch_high    = 1905;             //Maximum Ch2 value
-uint16_t yaw_low       = 1017;              //Minimum Ch4 value
-uint16_t yaw_high      = 1952;             //Maximum Ch4 value
+//uint16_t throttle_low  = 1140;             //Minimum Ch3 value
+//uint16_t throttle_high = 1826;             //Maximum Ch3 value
+//uint16_t roll_low      = 1053;             //Minimum Ch1 value
+//uint16_t roll_high     = 1952;             //Maximum Ch1 value
+//uint16_t pitch_low     = 1076;             //Minimum Ch2 value
+//uint16_t pitch_high    = 1905;             //Maximum Ch2 value
+//uint16_t yaw_low       = 1017;              //Minimum Ch4 value
+//uint16_t yaw_high      = 1952;             //Maximum Ch4 value
 
 boolean auto_level = true;                 //Auto level on (true) or off (false).
 
@@ -165,6 +172,7 @@ uint8_t error, error_counter, error_led;
 int16_t esc_1, esc_2, esc_3, esc_4;
 int16_t throttle, cal_int, hover_throttle, takeoff_throttle;
 float hoverThrottle;
+float throttle_ah = 800;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
 int16_t gyro_pitch, gyro_roll, gyro_yaw;
@@ -189,7 +197,7 @@ float pid_i_mem_roll, pid_roll_setpoint, gyro_roll_input, pid_output_roll, pid_l
 float pid_i_mem_pitch, pid_pitch_setpoint, gyro_pitch_input, pid_output_pitch, pid_last_pitch_d_error;
 float pid_i_mem_yaw, pid_yaw_setpoint, gyro_yaw_input, pid_output_yaw, pid_last_yaw_d_error;
 
-float pid_i_mem_altitude, pid_altitude_input, pid_output_altitude, pid_last_altitude_d_error;
+float pid_i_mem_altitude, pid_i_mem_altitude_v2, pid_altitude_input, pid_altitude_v2_input, pid_output_altitude, pid_output_altitude_v2, pid_last_altitude_d_error, pid_last_altitude_v2_d_error;
 
 float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 float battery_voltage;
@@ -265,6 +273,7 @@ void loop() {
   pid_attitude_sp();
   calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
   altitude_pid();
+  altitude_pid_v2();
   battery_control();
   
   //manage_throttle();
@@ -272,11 +281,13 @@ void loop() {
   if(Mando_canal[6] < 1500){
     throttle = Mando_canal[3];
     pid_i_mem_altitude = 0;
-    pid_last_altitude_d_error= 0;
+    pid_last_altitude_d_error = 0;
+	  throttle_ah = 800;
   }
   else{
-    hoverThrottle = -63.4 * battery_voltage + 2183;
-    throttle = hoverThrottle - pid_output_altitude;   
+    //hoverThrottle = -63.4 * battery_voltage + 2183;
+    //throttle = hoverThrottle - pid_output_altitude;   
+    throttle = throttle_ah;
   }
 
                                                             //We need the throttle signal as a base signal.
