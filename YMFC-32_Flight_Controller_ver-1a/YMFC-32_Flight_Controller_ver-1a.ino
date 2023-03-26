@@ -17,6 +17,35 @@ uint16_t throttle_str[length_str];
 uint16_t n_str = 0;
 
 long tiempo_motores_start, tiempo_1, tiempo_2, tiempo_ON;
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//ALTITUDE CONTROL VARIABLES
+///////////////////////////////////////////////////////////////////////////////////////
+int result;
+float temperature, pressure, h;
+
+uint32_t start, stop;
+
+
+// BAROMETER FCN
+
+uint8_t MS5611_address = 0x77;
+uint32_t raw_pressure, raw_temperature, temp, raw_temperature_rotating_memory[6], raw_average_temperature_total;
+int32_t dT, dT_C5;
+uint16_t C[7];
+int64_t OFF_a, OFF_a_C2, SENS, SENS_C1, P;
+uint8_t barometer_counter, temperature_counter, average_temperature_mem_location;
+int32_t pressure_rotating_mem[50], pressure_total_avarage;
+uint8_t pressure_rotating_mem_location;
+float actual_pressure, actual_pressure_slow, actual_pressure_fast, actual_pressure_diff;
+float ground_pressure, altutude_hold_pressure;
+uint8_t takeOFF_aa_detected, manual_altitude_change;
+float pressure_parachute_previous;
+int32_t parachute_buffer[35], parachute_throttle;
+uint8_t parachute_rotating_mem_location;
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //GPS VARIABLES
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +266,7 @@ void setup() {
   gyro_search();
   gyro_setup();
   calibrate_gyro();
+  barometer_setup();
   
   while (Mando_canal[1] < 990 || Mando_canal[2] < 990 || Mando_canal[3] < 990 || Mando_canal[4] < 990)  {
     read_RC();
@@ -271,10 +301,12 @@ void loop() {
   flash_write();
   gyro_process();
   pid_attitude_sp();
+  barometer_read();
   calculate_pid();                                                                 //PID inputs are known. So we can calculate the pid output.
   altitude_pid();
   altitude_pid_v2();
   battery_control();
+
   
   //manage_throttle();
 
