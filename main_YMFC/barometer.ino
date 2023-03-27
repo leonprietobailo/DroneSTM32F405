@@ -1,27 +1,5 @@
 
-void barometer_setup()
-{
 
-  for (start = 1; start <= 6; start++) {
-    Wire.beginTransmission(MS5611_address);                    //Start communication with the MPU-6050.
-    Wire.write(0xA0 + start * 2);                              //Send the address that we want to read.
-    Wire.endTransmission();                                    //End the transmission.
-
-    Wire.requestFrom(MS5611_address, 2);                       //Request 2 bytes from the MS5611.
-    C[start] = Wire.read() << 8 | Wire.read();                //Add the low and high byte to the C[x] calibration variable.
-  }
-
-  OFF_a_C2 = C[2] * pow(2, 16);                                   //This value is pre-calculated to offload the main program loop.
-  SENS_C1 = C[1] * pow(2, 15);                                  //This value is pre-calculated to offload the main program loop.
-
-  //The MS5611 needs a few readings to stabilize.
-  for (start = 0; start < 100; start++) {                       //This loop runs 100 times.
-    read_barometer();                                           //Read and calculate the barometer data.
-    delay(4);                                                   //The main program loop also runs 250Hz (4ms per loop).
-  }
-  actual_pressure = 0;                                          //Reset the pressure calculations.
-
-}
 
 void barometer_read(void) {
   barometer_counter ++;
