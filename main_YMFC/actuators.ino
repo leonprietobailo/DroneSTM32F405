@@ -7,12 +7,12 @@ void actuators(){
     throttle = Mando_canal[3];
     pid_i_mem_altitude = 0;
     pid_last_altitude_d_error = 0;
-	  throttle_ah = 800;
+	  throttle_ah = throttle;
   }
   else{
     hoverThrottle = -63.4 * battery_voltage + 2183;
-    throttle = hoverThrottle - pid_output_altitude;   
-    //throttle = throttle_ah;
+    //throttle = hoverThrottle - pid_output_altitude;   
+    throttle = throttle_ah;
   }
 
   act_esc_outputs();

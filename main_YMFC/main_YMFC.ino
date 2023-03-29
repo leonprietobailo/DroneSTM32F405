@@ -5,10 +5,22 @@
 //#include <Sd2Card.h>
 //#include <SdFatFs.h>
 //#include <STM32SD.h>
+
+
 #include <Wire.h>
+#include "LowPass.h"
+
+
+// New Alt Hold PID
+uint16_t last_alt_hold_PID;
+float pid_t_control_error, pid_t_output, pid_rate_control_error, pid_i_mem_rate, pid_rate_error_prev, pid_output_rate;
 
 // ULTRASONIC
 
+LowPass<2> lp(3,1e3,true);
+float distanceFilt;
+float velocityFilt;
+float velocity_raw; 
 float sentLastPulse, duration, pulseStart, pulseEnd, computedDistance;
 bool pulseSent;
 
@@ -40,6 +52,7 @@ long tiempo_motores_start, tiempo_1, tiempo_2, tiempo_ON;
 ///////////////////////////////////////////////////////////////////////////////////////
 int result;
 float temperature_bar, pressure, h;
+
 
 uint32_t st, stop;
 
@@ -149,10 +162,16 @@ int pid_max_altitude = 400;
 
 // ALTITUDE PID V2
 
-float pid_p_gain_altitude_v2 = 0.0005;
+float pid_p_gain_altitude_v2 = 0.005 * 2.5;
 float pid_i_gain_altitude_v2 = 0;
 float pid_d_gain_altitude_v2 = 0;
 int pid_max_altitude_v2 = 400;  
+
+// ALTITUDE PID V3
+float THR_ALT_P = 0.1;
+float RATE_THR_P = 0;
+float RATE_THR_I = 0;
+float RATE_THR_D = 0;
 
 // GPS PD
 
@@ -181,7 +200,7 @@ uint8_t error, error_counter, error_led;
 int16_t esc_1, esc_2, esc_3, esc_4;
 int16_t throttle, cal_int, hover_throttle, takeoff_throttle;
 float hoverThrottle;
-float throttle_ah = 800;
+float throttle_ah;
 int16_t temperature, count_var;
 int16_t acc_x, acc_y, acc_z;
 int16_t gyro_pitch, gyro_roll, gyro_yaw;
@@ -266,4 +285,5 @@ void loop() {
   }
   while (micros() - loop_timer < 4000);
   loop_timer = micros();
+  alt_hold_pid();
 }

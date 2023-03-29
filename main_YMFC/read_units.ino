@@ -69,7 +69,11 @@ void read_ultrasonic(){
       if (computedDistance < 200){
         prevDistance = distance;
         distance = computedDistance; //0.95 * distance + 0.05 * computedDistance;
+        distanceFilt = lp.filt(distance);
+        velocity_raw = (distance - prevDistance) / (micros() - timeLast) * 1e6;
+        velocityFilt = (distanceFilt - prevDistance) / (micros() - timeLast) * 1e6;
         velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6; 
+        
         timeLast = micros();
       }
       pulseSent = false;

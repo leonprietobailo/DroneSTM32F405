@@ -160,7 +160,7 @@ void altitude_pid(){
 void altitude_pid_v2(){
 
   pid_altitude_v2_input = distance;                           // Measurements comming from sensor [cm]              
-  pid_error_temp_altitude_v2 = pid_altitude_v2_input - 45;    // Control error signal generation. Meas - Reference.
+  pid_error_temp_altitude_v2 = pid_altitude_v2_input - 60;    // Control error signal generation. Meas - Reference.
 
  
 
@@ -184,8 +184,30 @@ void altitude_pid_v2(){
   
   throttle_ah -= pid_output_altitude_v2;
 
-  
-  
+}
 
-  
+
+void alt_hold_pid(){
+  // 50 hz PID control. Schematic used: https://ardupilot.org/copter/docs/altholdmode.html
+  if(micros() - last_alt_hold_PID > 20000){
+    
+    // First we have a proportional controller which maps the distance off target into desired vertical speed
+    pid_t_control_error = distanceFilt - 60;
+    pid_t_output = pid_t_control_error * THR_ALT_P;
+
+    // Increase constrain after tests
+    constrain(pid_t_output, -80, 80);
+
+    pid_rate_control_error = velocityFilt - pid_t_output;
+    pid_i_mem_rate += pid_rate_control_error;
+    constrain(pid_i_mem_rate, -200, 200);
+
+    pid_output_rate = RATE_THR_P * pid_rate_control_error + RATE_THR_I * pid_i_mem_rate + RATE_THR_D * (pid_rate_control_error - pid_rate_error_prev);
+
+    pid_rate_error_prev = pid_rate_control_error;
+
+    last_alt_hold_PID = micros();
+
+    throttle_ah += pid_output_rate;
+  }
 }

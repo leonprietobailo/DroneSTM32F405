@@ -5,6 +5,11 @@ void diagnostics(){
 
 
 void diag_print(){
+
+
+//Serial.println(throttle);
+
+  
 	//  Serial.print(Mando_canal[1]);
 //  Serial.print("\t");
 //  Serial.print(Mando_canal[2]);
@@ -23,14 +28,14 @@ void diag_print(){
 //  Serial.print(throttle);
 //  Serial.print("\n");
 //
-  Serial.print(esc_1);
-  Serial.print("\t");
-  Serial.print(esc_2);
-  Serial.print("\t");
-  Serial.print(esc_3);
-  Serial.print("\t");
-  Serial.print(esc_4);
-  Serial.print("\n");
+//  Serial.print(esc_1);
+//  Serial.print("\t");
+//  Serial.print(esc_2);
+//  Serial.print("\t");
+//  Serial.print(esc_3);
+//  Serial.print("\t");
+//  Serial.print(esc_4);
+//  Serial.print("\n");
 
 //    Serial.print(acc_x_cal);
 //    Serial.print("\t");
@@ -59,6 +64,10 @@ void diag_print(){
   //Serial.println(takeoff_throttle);
   //Serial.println(start);
   //Serial.println(battery_voltage);
+
+  Serial.print(distance);
+  Serial.print("\t");
+  Serial.println(distanceFilt);
 	
 }
 
