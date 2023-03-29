@@ -18,19 +18,19 @@ void diag_print(){
 //  Serial.print(Mando_canal[6]);
 //  Serial.print("\n");
 
-  Serial.print(distance);
-  Serial.print("\t");
-  Serial.print(throttle);
-  Serial.print("\n");
-//
-//  Serial.print(esc_1);
+//  Serial.print(distance);
 //  Serial.print("\t");
-//  Serial.print(esc_2);
-//  Serial.print("\t");
-//  Serial.print(esc_3);
-//  Serial.print("\t");
-//  Serial.print(esc_4);
+//  Serial.print(throttle);
 //  Serial.print("\n");
+//
+  Serial.print(esc_1);
+  Serial.print("\t");
+  Serial.print(esc_2);
+  Serial.print("\t");
+  Serial.print(esc_3);
+  Serial.print("\t");
+  Serial.print(esc_4);
+  Serial.print("\n");
 
 //    Serial.print(acc_x_cal);
 //    Serial.print("\t");
@@ -181,4 +181,3 @@ void led_slow() {
 void led_off() {
 	digitalWrite(PC1, LOW);
 }
-

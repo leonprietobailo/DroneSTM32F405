@@ -56,7 +56,7 @@ void pid_attitude_sp(){
 
 void calculate_pid(void){
   //Roll calculations
-  if (distance > 15){
+  if (distance > 25){
     pid_i_gain_roll_in = pid_i_gain_roll;
   }
   else{
@@ -75,7 +75,7 @@ void calculate_pid(void){
   pid_last_roll_d_error = pid_error_temp;
 
   //Pitch calculations
-  if (distance > 15){
+  if (distance > 25){
     pid_i_gain_pitch_in = pid_i_gain_pitch;
   }
   else{
@@ -94,7 +94,7 @@ void calculate_pid(void){
   pid_last_pitch_d_error = pid_error_temp;
 
   //Yaw calculations
-  if (distance > 15){
+  if (distance > 25){
     pid_i_gain_yaw_in = pid_i_gain_yaw;
   }
   else{

@@ -10,9 +10,9 @@ void actuators(){
 	  throttle_ah = 800;
   }
   else{
-    //hoverThrottle = -63.4 * battery_voltage + 2183;
-    //throttle = hoverThrottle - pid_output_altitude;   
-    throttle = throttle_ah;
+    hoverThrottle = -63.4 * battery_voltage + 2183;
+    throttle = hoverThrottle - pid_output_altitude;   
+    //throttle = throttle_ah;
   }
 
   act_esc_outputs();
