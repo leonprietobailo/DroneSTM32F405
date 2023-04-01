@@ -65,10 +65,18 @@ void diag_print(){
   //Serial.println(start);
   //Serial.println(battery_voltage);
 
-  Serial.print(distance);
-  Serial.print("\t");
-  Serial.println(distanceFilt);
-	
+  //Serial.print(distance);
+  //Serial.print("\t");
+  //Serial.println(distanceFilt);
+
+  //Serial.print(velocity_raw);
+  //Serial.print("\t");
+  Serial.println(velocityFilt);
+
+
+
+
+  
 }
 
 

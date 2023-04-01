@@ -195,6 +195,12 @@ void alt_hold_pid(){
     pid_t_control_error = distanceFilt - 60;
     pid_t_output = pid_t_control_error * THR_ALT_P;
 
+    throttle_ah += pid_t_output;
+
+
+    // \/\/\/ PART BELOW TO BE DELETED \/\/\/
+    // Reason: Velocity signal comming from ultrasonic sensor is 
+    
     // Increase constrain after tests
     constrain(pid_t_output, -80, 80);
 
@@ -208,6 +214,7 @@ void alt_hold_pid(){
 
     last_alt_hold_PID = micros();
 
-    throttle_ah += pid_output_rate;
+    // /\/\/\ PART AVOBE TO BE DELETED /\/\/\
   }
+}
 }

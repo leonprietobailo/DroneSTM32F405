@@ -7,6 +7,7 @@
 //#include <STM32SD.h>
 
 
+
 #include <Wire.h>
 #include "LowPass.h"
 
@@ -58,7 +59,7 @@ uint32_t st, stop;
 
 // ULTRASONIC
 unsigned long timeLast;
-float prevDistance;
+float prevDistance,prevDistanceFilt;
 
 // BAROMETER FCN
 
