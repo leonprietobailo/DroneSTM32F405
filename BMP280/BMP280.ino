@@ -39,6 +39,10 @@ int32_t pressure_msb, pressure_lsb, pressure_xlsb, adc_P;
 
 
 
+float pressure_total_avarage, pressure_rotating_mem[12], actual_pressure_fast, actual_pressure_slow, actual_pressure_diff, actual_pressure;
+uint8_t pressure_rotating_mem_location;
+    
+
 void setup() {
   Serial.begin(115200);  // initialize serial communication
   Wire.begin();  // initialize I2C communication
@@ -75,15 +79,15 @@ void loop() {
   //Serial.print("\t");
   //Serial.println(P);
 
-  
+  Serial.print(actual_pressure);
+  Serial.print("\t");
+  Serial.println(P);
   if(old_P != P){
     //Serial.println(P);
   }
 
   while( micros() - l_timer < 4000); 
   l_timer = micros();
-
-  
 }
 
 void init_params(){
@@ -134,10 +138,29 @@ void read_sensor() {
     sensorCnt = 0;
     
     P_filt = lp.filt(P);
+//    
+//    Serial.print(P);
+//    Serial.print("\t");
+//    Serial.println(P_filt);
+
+
+
     
-    Serial.print(P);
-    Serial.print("\t");
-    Serial.println(P_filt);
+    pressure_total_avarage -= pressure_rotating_mem[pressure_rotating_mem_location]; 
+    pressure_rotating_mem[pressure_rotating_mem_location] = P;                                              
+    pressure_total_avarage += pressure_rotating_mem[pressure_rotating_mem_location];
+    pressure_rotating_mem_location++;                     
+    if (pressure_rotating_mem_location == 12)pressure_rotating_mem_location = 0;       
+    actual_pressure_fast = (float)pressure_total_avarage / 12.0;      
+    actual_pressure_slow = actual_pressure_slow * (float)0.985 + actual_pressure_fast * (float)0.015;
+
+    actual_pressure_diff = actual_pressure_slow - actual_pressure_fast;                                     
+    if (actual_pressure_diff > 8)actual_pressure_diff = 8;                               
+    if (actual_pressure_diff < -8)actual_pressure_diff = -8;                                
+    
+    if (actual_pressure_diff > 1 || actual_pressure_diff < -1)actual_pressure_slow -= actual_pressure_diff / 6.0;
+    actual_pressure = actual_pressure_slow;   
+    
   }
   sensorCnt++;
 }
