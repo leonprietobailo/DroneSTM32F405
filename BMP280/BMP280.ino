@@ -42,6 +42,11 @@ int32_t pressure_msb, pressure_lsb, pressure_xlsb, adc_P;
 float pressure_total_avarage, pressure_rotating_mem[12], actual_pressure_fast, actual_pressure_slow, actual_pressure_diff, actual_pressure;
 uint8_t pressure_rotating_mem_location;
     
+// Parachute throttle: 
+int32_t parachute_buffer[20], parachute_throttle;
+float pressure_parachute_previous;
+uint8_t parachute_rotating_mem_location;
+
 
 void setup() {
   Serial.begin(115200);  // initialize serial communication
@@ -79,9 +84,10 @@ void loop() {
   //Serial.print("\t");
   //Serial.println(P);
 
-  Serial.print(actual_pressure);
-  Serial.print("\t");
-  Serial.println(P);
+  //Serial.println(parachute_throttle);
+  //Serial.print(actual_pressure);
+  //Serial.print("\t");
+  //Serial.println(P);
   if(old_P != P){
     //Serial.println(P);
   }
@@ -159,7 +165,17 @@ void read_sensor() {
     if (actual_pressure_diff < -8)actual_pressure_diff = -8;                                
     
     if (actual_pressure_diff > 1 || actual_pressure_diff < -1)actual_pressure_slow -= actual_pressure_diff / 6.0;
-    actual_pressure = actual_pressure_slow;   
+    actual_pressure = actual_pressure_slow;
+
+
+    // LONG TERM VARIATION
+    parachute_throttle -= parachute_buffer[parachute_rotating_mem_location];                                  //Subtract the current memory position to make room for the new value.
+    parachute_buffer[parachute_rotating_mem_location] = actual_pressure * 10 - pressure_parachute_previous;   //Calculate the new change between the actual pressure and the previous measurement.
+    parachute_throttle += parachute_buffer[parachute_rotating_mem_location];                                  //Add the new value to the long term avarage value.
+    pressure_parachute_previous = actual_pressure * 10;                                                       //Store the current measurement for the next loop.
+    parachute_rotating_mem_location++;                                                                        //Increase the rotating memory location.
+    if (parachute_rotating_mem_location == 20)parachute_rotating_mem_location = 0;                            //Start at 0 when the memory location 20 is reached.
+    Serial.println(parachute_rotating_mem_location);
     
   }
   sensorCnt++;
@@ -230,11 +246,6 @@ void read_pressure(){
 
 
 void bmp280_compensate_P_int64(){
-
-
-
-
-
   var1 = ((int64_t)t_fine) - 128000;
   var2 = var1 * var1 * (int64_t)dig_P6;
   var2 = var2 + ((var1 * (int64_t)dig_P5) << 17);
@@ -250,9 +261,5 @@ void bmp280_compensate_P_int64(){
   p = ((p + var1 + var2) >> 8) + (((int64_t)dig_P7) << 4);
   p_32 = (int32_t)p;
   P = float(p_32) / 256.0;
-  }
-
-
-
-  
+  }  
 }

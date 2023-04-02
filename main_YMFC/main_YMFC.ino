@@ -12,21 +12,70 @@
 #include "LowPass.h"
 
 
+
+// BMP280 VARIABLES:
+
+#define BMP280_ADDRESS 0x76                    // BMP280 I2C address (can also be 0x77)
+#define BMP280_REGISTER_PRESSURE_MSB 0xF7      // pressure register address
+#define BMP280_REGISTER_PRESSURE_LSB 0xF8      // pressure register address
+#define BMP280_REGISTER_PRESSURE_XLSB 0xF9     // pressure register address
+#define BMP280_REGISTER_TEMPERATURE_MSB 0xFA   // pressure register address
+#define BMP280_REGISTER_TEMPERATURE_LSB 0xFB   // pressure register address
+#define BMP280_REGISTER_TEMPERATURE_XLSB 0xFC  // pressure register address
+
+int32_t t_fine;
+
+// BMP280 COMPENSATION PARAMETERS
+uint16_t dig_T1;
+int16_t dig_T2;
+int16_t dig_T3;
+uint16_t dig_P1;
+int16_t dig_P2;
+int16_t dig_P3;
+int16_t dig_P4;
+int16_t dig_P5;
+int16_t dig_P6;
+int16_t dig_P7;
+int16_t dig_P8;
+int16_t dig_P9;
+
+int64_t var1, var2, p;
+int32_t p_32;
+int32_t var1_32, var2_32;
+
+// Temperature and pressure variables
+int32_t temperature_msb, temperature_lsb, temperature_xlsb, adc_T, t_temp;
+float T, P, P_filt;
+int32_t pressure_msb, pressure_lsb, pressure_xlsb, adc_P;
+
+// Pressure signal smoothened
+float pressure_total_avarage, pressure_rotating_mem[12], actual_pressure_fast, actual_pressure_slow, actual_pressure_diff, actual_pressure;
+uint8_t pressure_rotating_mem_location, barometer_counter;
+
+// Parachute throttle: 
+int32_t parachute_buffer[20], parachute_throttle;
+float pressure_parachute_previous;
+uint8_t parachute_rotating_mem_location;
+
+// BMP280 PID
+float pid_altitude_setpoint, pid_error_gain_altitude;
+
+
 // New Alt Hold PID
 uint16_t last_alt_hold_PID;
 float pid_t_control_error, pid_t_output, pid_rate_control_error, pid_i_mem_rate, pid_rate_error_prev, pid_output_rate;
 
 // ULTRASONIC
 
-LowPass<2> lp(3,1e3,true);
+LowPass<2> lp(3, 1e3, true);
 float distanceFilt;
 float velocityFilt;
-float velocity_raw; 
+float velocity_raw;
 float sentLastPulse, duration, pulseStart, pulseEnd, computedDistance;
 bool pulseSent;
 
 // Air temperature linear aproximation, temeprature to be replaced with vlaue obtainted from MPU6050
-long cAir = 331.3 + 20.0 * 0.606;     
+long cAir = 331.3 + 20.0 * 0.606;
 
 // LED
 volatile long led_timer;
@@ -59,24 +108,24 @@ uint32_t st, stop;
 
 // ULTRASONIC
 unsigned long timeLast;
-float prevDistance,prevDistanceFilt;
+float prevDistance, prevDistanceFilt;
 
 // BAROMETER FCN
 
-uint8_t MS5611_address = 0x77;
-uint32_t raw_pressure, raw_temperature, temp, raw_temperature_rotating_memory[6], raw_average_temperature_total;
-int32_t dT, dT_C5;
-uint16_t C[7];
-int64_t OFF_a, OFF_a_C2, SENS, SENS_C1, P;
-uint8_t barometer_counter, temperature_counter, average_temperature_mem_location;
-int32_t pressure_rotating_mem[50], pressure_total_avarage;
-uint8_t pressure_rotating_mem_location;
-float actual_pressure, actual_pressure_slow, actual_pressure_fast, actual_pressure_diff;
-float ground_pressure, altutude_hold_pressure;
-uint8_t takeOFF_aa_detected, manual_altitude_change;
-float pressure_parachute_previous;
-int32_t parachute_buffer[35], parachute_throttle;
-uint8_t parachute_rotating_mem_location;
+// uint8_t MS5611_address = 0x77;
+// uint32_t raw_pressure, raw_temperature, temp, raw_temperature_rotating_memory[6], raw_average_temperature_total;
+// int32_t dT, dT_C5;
+// uint16_t C[7];
+// int64_t OFF_a, OFF_a_C2, SENS, SENS_C1;
+// uint8_t temperature_counter, average_temperature_mem_location;
+// //int32_t pressure_rotating_mem[50], pressure_total_avarage;
+// //uint8_t pressure_rotating_mem_location;
+// float actual_pressure, actual_pressure_slow, actual_pressure_fast, actual_pressure_diff;
+// float ground_pressure, altutude_hold_pressure;
+// uint8_t takeOFF_aa_detected, manual_altitude_change;
+// float pressure_parachute_previous;
+// int32_t parachute_buffer[35], parachute_throttle;
+// uint8_t parachute_rotating_mem_location;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +134,7 @@ uint8_t parachute_rotating_mem_location;
 
 //GPS variables
 uint8_t read_serial_byte, incomming_message[100], number_used_sats, fix_type;
-uint8_t waypoint_set, latitude_north, longiude_east ;
+uint8_t waypoint_set, latitude_north, longiude_east;
 uint16_t message_counter;
 int16_t gps_add_counter;
 int32_t l_lat_gps, l_lon_gps, lat_gps_previous, lon_gps_previous;
@@ -166,7 +215,7 @@ int pid_max_altitude = 400;
 float pid_p_gain_altitude_v2 = 0.005 * 2.5;
 float pid_i_gain_altitude_v2 = 0;
 float pid_d_gain_altitude_v2 = 0;
-int pid_max_altitude_v2 = 400;  
+int pid_max_altitude_v2 = 400;
 
 // ALTITUDE PID V3
 float THR_ALT_P = 0.1;
@@ -233,13 +282,13 @@ float battery_voltage;
 
 #define pin_PPM PA4
 
-#define pin_motor1 PC6        // Pin motor 1  GPIO 6
-#define pin_motor2 PC7        // Pin motor 2  GPIO 5  
-#define pin_motor3 PB9        // Pin motor 3  GPIO 10
-#define pin_motor4 PB8        // Pin motor 4  GPIO 9
+#define pin_motor1 PC6  // Pin motor 1  GPIO 6
+#define pin_motor2 PC7  // Pin motor 2  GPIO 5
+#define pin_motor3 PB9  // Pin motor 3  GPIO 10
+#define pin_motor4 PB8  // Pin motor 4  GPIO 9
 
-#define triggerPin PC3           // Trigger Pin Ultrasonico
-#define echoPin PC2           // Echo Pin Ultrasonico
+#define triggerPin PC3  // Trigger Pin Ultrasonico
+#define echoPin PC2     // Echo Pin Ultrasonico
 
 float distance;
 float velocity;
@@ -248,20 +297,20 @@ float velocity;
 //Setup routine
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup() {
-  Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
+  Serial.begin(57600);  //Set the serial output to 57600 kbps. (for debugging only)
   delay(5000);
 
   init_components();
   led_off();
-  
-  while (Mando_canal[1] < 990 || Mando_canal[2] < 990 || Mando_canal[3] < 990 || Mando_canal[4] < 990)  {
+
+  while (Mando_canal[1] < 990 || Mando_canal[2] < 990 || Mando_canal[3] < 990 || Mando_canal[4] < 990) {
     read_rc();
     delay(4);
   }
-  
+
   loop_timer = micros();
   led_on();
-  Serial.println("Setup finished");  
+  Serial.println("Setup finished");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -278,13 +327,13 @@ void loop() {
 
   //manage_throttle();
   //barometer_read();  //To be splitted within read_units and measurement_processing
-  
-  if (micros() - loop_timer > 4050){
+
+  if (micros() - loop_timer > 4050) {
     Serial.print("LOOP SLOW");
     Serial.print("\t");
-    
   }
-  while (micros() - loop_timer < 4000);
+  while (micros() - loop_timer < 4000)
+    ;
   loop_timer = micros();
   alt_hold_pid();
 }
