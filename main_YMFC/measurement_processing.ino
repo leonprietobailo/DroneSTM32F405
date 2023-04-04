@@ -7,9 +7,9 @@ void measurement_processing() {
 void process_rc(void) {
 
   //For starting the motors: throttle low and yaw left (step 1).
-  if (Mando_canal[3] < 1050 && Mando_canal[4] < 1050) start = 1;
+  if (Mando_canal[3] < 1100 && Mando_canal[4] < 1100) start = 1;
   //When yaw stick is back in the center position start the motors (step 2).
-  if (start == 1 && Mando_canal[3] < 1050 && Mando_canal[4] > 1450) {
+  if (start == 1 && Mando_canal[3] < 1100 && Mando_canal[4] > 1450) {
     start = 2;
     throttle = 950;
     acc_total_vector_at_start = acc_total_vector;  //Register the acceleration when the quadcopter is started.

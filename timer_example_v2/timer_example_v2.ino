@@ -26,9 +26,7 @@ HardwareTimer *MyTim = new HardwareTimer(Instance);
 void setup()
 {
   Serial.begin(57600);
-  while(!Serial){
-    delay(4);
-  }
+  
   //Serial.println(digitalPinToPinName(pin));
   //Serial.println(channel);
   // no need to configure pin, it will be done by HardwareTimer configuration
@@ -44,7 +42,10 @@ void setup()
 
   // Configure and start PWM
   // MyTim->setPWM(channel, pin, 5, 10, NULL, NULL); // No callback required, we can simplify the function call
-  MyTim->setPWM(channel, pin, 1, 50.5); // 5 Hertz, 10% dutycycle
+  MyTim->setPWM(channel, pin, 1, 25); // 5 Hertz, 10% dutycycle
+  while(!Serial){
+    delay(4);
+  }
   
 }
 
@@ -52,16 +53,12 @@ uint32_t timer_cnt = 0;
 void loop()
 {
   timer_cnt = micros();
-  //if (digitalRead(PC3) == HIGH){
-    MyTim->pause();
-    MyTim->setPWM(channel, pin, 1, 50.5);
-    MyTim->resume();
-  //}
-//  else{
-//    MyTim->pause();
-//    MyTim->setPWM(channel, pin, 1, 90);
-//    MyTim->resume();
-//  }
+  if (digitalRead(PC3) == HIGH){
+    MyTim->setCaptureCompare(channel, 250000, MICROSEC_COMPARE_FORMAT);
+  }
+  else{
+    MyTim->setCaptureCompare(channel, 500000, MICROSEC_COMPARE_FORMAT);
+  }
 
   Serial.println(micros() - timer_cnt);
   delay(1000);

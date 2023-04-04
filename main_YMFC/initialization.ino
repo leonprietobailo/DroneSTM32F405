@@ -44,17 +44,12 @@ void init_rc() {
 }
 
 void init_esc() {
-  // Declaración de los pines de los motores
-  pinMode(pin_motor1, OUTPUT);  //Motor 1
-  pinMode(pin_motor2, OUTPUT);  //Motor 2
-  pinMode(pin_motor3, OUTPUT);  //Motor 3
-  pinMode(pin_motor4, OUTPUT);  //Motor 4
-  // Forzar los pines a estado LOW
-  digitalWrite(pin_motor1, LOW);
-  digitalWrite(pin_motor2, LOW);
-  digitalWrite(pin_motor3, LOW);
-  digitalWrite(pin_motor4, LOW);
+  TIM_M1_M2->setPWM(channel_motor1, pin_motor1, 250, 0);
+  TIM_M1_M2->setPWM(channel_motor2, pin_motor2, 250, 0);
+  TIM_M3_M4->setPWM(channel_motor3, pin_motor3, 250, 0);
+  TIM_M3_M4->setPWM(channel_motor4, pin_motor4, 250, 0);  
 }
+
 
 void init_gyro(void) {
   Wire.begin();                          //Start the I2C as master

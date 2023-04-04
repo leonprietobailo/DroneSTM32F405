@@ -215,7 +215,7 @@ float pid_i_gain_yaw_in = 0;
 // BAROMETER PID
 float pid_p_gain_altitude_og = 1.4;
 float pid_i_gain_altitude = 0; //0.2;
-float pid_d_gain_altitude = 0.75;
+float pid_d_gain_altitude = 0; //0.75;
 int pid_max_altitude = 400;
 float pid_p_gain_altitude = 1.4;
 
@@ -296,20 +296,21 @@ float battery_voltage;
 #define pin_motor3 PB9  // Pin motor 3  GPIO 10
 #define pin_motor4 PB8  // Pin motor 4  GPIO 9
 
-TIM_TypeDef *Instance_motor1 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor1), PinMap_PWM);
-TIM_TypeDef *Instance_motor2 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor2), PinMap_PWM);
-TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
-TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
+TIM_TypeDef *TIM_DEF_M1_M2 = TIM3;
+TIM_TypeDef *TIM_DEF_M3_M4 = TIM4;
+//TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
+//TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
 
 uint32_t channel_motor1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor1), PinMap_PWM));
 uint32_t channel_motor2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor2), PinMap_PWM));
 uint32_t channel_motor3 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor3), PinMap_PWM));
 uint32_t channel_motor4 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor4), PinMap_PWM));
 
-HardwareTimer *MyTim_motor1 = new HardwareTimer(Instance_motor1);
-HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
-HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
-HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
+HardwareTimer *TIM_M1_M2 = new HardwareTimer(TIM_DEF_M1_M2);
+HardwareTimer *TIM_M3_M4 = new HardwareTimer(TIM_DEF_M3_M4);
+//HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
+//HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
+//HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
 
 #define triggerPin PC3  // Trigger Pin Ultrasonico
 #define echoPin PC2     // Echo Pin Ultrasonico
@@ -323,7 +324,7 @@ float velocity;
 void setup() {
   Serial.begin(57600);  //Set the serial output to 57600 kbps. (for debugging only)
   delay(5000);
-
+  
   init_components();
   led_off();
 
@@ -335,6 +336,7 @@ void setup() {
   loop_timer = micros();
   led_on();
   Serial.println("Setup finished");
+  //init_pwms();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

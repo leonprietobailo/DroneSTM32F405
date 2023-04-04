@@ -1,7 +1,7 @@
 
 void actuators() {
 
-  act_esc_PWM();
+  act_esc_PWM_v2();
 
   if (Mando_canal[6] < 1500) {
     throttle = Mando_canal[3];
@@ -52,20 +52,24 @@ void act_esc_PWM() {
 
 void act_esc_PWM_v2(){
 
-  MyTim_motor1->pause();
-  MyTim_motor2->pause();
-  MyTim_motor3->pause();
-  MyTim_motor4->pause();
+//  MyTim_motor1->pause();
+//  MyTim_motor2->pause();
+//  MyTim_motor3->pause();
+//  MyTim_motor4->pause();
 
-  MyTim_motor1->setPWM(channel_motor1, pin_motor1, 250, esc_1 / 40.0);
-  MyTim_motor2->setPWM(channel_motor2, pin_motor2, 250, esc_2 / 40.0);
-  MyTim_motor3->setPWM(channel_motor3, pin_motor3, 250, esc_3 / 40.0);
-  MyTim_motor4->setPWM(channel_motor4, pin_motor4, 250, esc_4 / 40.0);
+ // MyTim->setCaptureCompare(channel, 900000, MICROSEC_COMPARE_FORMAT);
 
-  MyTim_motor1->resume();
-  MyTim_motor2->resume();
-  MyTim_motor3->resume();
-  MyTim_motor4->resume();
+  
+  TIM_M1_M2->setCaptureCompare(channel_motor1, esc_1, MICROSEC_COMPARE_FORMAT);
+  TIM_M1_M2->setCaptureCompare(channel_motor2, esc_2, MICROSEC_COMPARE_FORMAT);
+  TIM_M3_M4->setCaptureCompare(channel_motor3, esc_3, MICROSEC_COMPARE_FORMAT);
+  TIM_M3_M4->setCaptureCompare(channel_motor4, esc_4, MICROSEC_COMPARE_FORMAT);
+
+//  Serial.println("Before resume");
+//  MyTim_motor1->resume();
+//  MyTim_motor2->resume();
+//  MyTim_motor3->resume();
+//  MyTim_motor4->resume();
 
 }
 
