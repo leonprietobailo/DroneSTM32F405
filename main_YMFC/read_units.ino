@@ -1,8 +1,20 @@
 void read_units() {
+
+  //loop_timer = micros();
   read_battery();
+  //Serial.print(micros() - loop_timer);
+  //Serial.print("\t");
+  //loop_timer = micros();
   read_rc();
+  //Serial.print(micros() - loop_timer);
+  //Serial.print("\t");
+  //loop_timer = micros();
   read_gyro();
+  //Serial.print(micros() - loop_timer);
+  //Serial.print("\t");
+  //loop_timer = micros();
   read_barometer_v2();
+  //Serial.println(micros() - loop_timer);
 }
 
 

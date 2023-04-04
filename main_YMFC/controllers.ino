@@ -2,8 +2,9 @@
 void controllers() {
   pid_attitude_sp();
   calculate_pid();
-  altitude_pid();
-  altitude_pid_v2();
+  //altitude_pid();
+  //altitude_pid_v2();
+  barometer_v2_cnt();
 }
 
 
@@ -218,7 +219,7 @@ void alt_hold_pid() {
 
 void barometer_v2_cnt() {
 
-
+  if (micros() - last_alt_hold_PID > 20000) {
   //Calculate the PID output of the altitude hold.
   pid_altitude_input = actual_pressure;                         //Set the setpoint (pid_altitude_input) of the PID-controller.
   pid_error_temp = pid_altitude_input - pid_altitude_setpoint;  //Calculate the error between the setpoint and the actual pressure value.
@@ -245,6 +246,7 @@ void barometer_v2_cnt() {
   if (pid_output_altitude > pid_max_altitude) pid_output_altitude = pid_max_altitude;
   else if (pid_output_altitude < pid_max_altitude * -1) pid_output_altitude = pid_max_altitude * -1;
 
-
-  throttle_ah -= pid_output_altitude;
+//  throttle_ah -= pid_output_altitude;
+//  throttle_ah = constrain(throttle_ah, 1300, 1700);
+  }
 }

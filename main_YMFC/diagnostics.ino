@@ -1,6 +1,6 @@
 void diagnostics() {
   diag_print();
-  diag_flash();
+  //diag_flash();
 }
 
 
@@ -9,19 +9,20 @@ void diag_print() {
 
   //Serial.println(throttle);
 
-
-  //  Serial.print(Mando_canal[1]);
-  //  Serial.print("\t");
-  //  Serial.print(Mando_canal[2]);
-  //  Serial.print("\t");
-  //  Serial.print(Mando_canal[3]);
-  //  Serial.print("\t");
-  //  Serial.print(Mando_canal[4]);
-  //  Serial.print("\t");
-  //  Serial.print(Mando_canal[5]);
-  //  Serial.print("\t");
-  //  Serial.print(Mando_canal[6]);
-  //  Serial.print("\n");
+//    Serial.print(distance);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[1]);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[2]);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[3]);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[4]);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[5]);
+//    Serial.print("\t");
+//    Serial.print(Mando_canal[6]);
+//    Serial.print("\n");
 
   //  Serial.print(distance);
   //  Serial.print("\t");
@@ -71,7 +72,20 @@ void diag_print() {
 
   //Serial.print(velocity_raw);
   //Serial.print("\t");
-  Serial.println(velocityFilt);
+  //Serial.println(velocityFilt);
+
+  //Serial.println(actual_pressure);
+
+
+//  Serial.print(pid_p_gain_altitude, 4);
+//  Serial.print("\t");
+//  Serial.print(throttle_ah);
+//  Serial.print("\t");
+//  Serial.println(pid_altitude_setpoint);
+
+ //Serial.println(pid_output_altitude);
+ 
+
 }
 
 

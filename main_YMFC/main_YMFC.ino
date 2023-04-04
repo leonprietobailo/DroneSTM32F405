@@ -203,12 +203,21 @@ int pid_max_yaw = 400;
 
 float pid_i_gain_yaw_in = 0;
 
-// ALTITUDE PID
+// ALTITUDE PID [DP]
 
-float pid_p_gain_altitude = 1;
-float pid_i_gain_altitude = 0;
-float pid_d_gain_altitude = 15;
+//float pid_p_gain_altitude = 1;
+//float pid_i_gain_altitude = 0;
+//float pid_d_gain_altitude = 15;
+//int pid_max_altitude = 400;
+
+
+
+// BAROMETER PID
+float pid_p_gain_altitude_og = 1.4;
+float pid_i_gain_altitude = 0; //0.2;
+float pid_d_gain_altitude = 0.75;
 int pid_max_altitude = 400;
+float pid_p_gain_altitude = 1.4;
 
 // ALTITUDE PID V2
 
@@ -287,6 +296,21 @@ float battery_voltage;
 #define pin_motor3 PB9  // Pin motor 3  GPIO 10
 #define pin_motor4 PB8  // Pin motor 4  GPIO 9
 
+TIM_TypeDef *Instance_motor1 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor1), PinMap_PWM);
+TIM_TypeDef *Instance_motor2 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor2), PinMap_PWM);
+TIM_TypeDef *Instance_motor3 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor3), PinMap_PWM);
+TIM_TypeDef *Instance_motor4 = (TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(pin_motor4), PinMap_PWM);
+
+uint32_t channel_motor1 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor1), PinMap_PWM));
+uint32_t channel_motor2 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor2), PinMap_PWM));
+uint32_t channel_motor3 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor3), PinMap_PWM));
+uint32_t channel_motor4 = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(pin_motor4), PinMap_PWM));
+
+HardwareTimer *MyTim_motor1 = new HardwareTimer(Instance_motor1);
+HardwareTimer *MyTim_motor2 = new HardwareTimer(Instance_motor2);
+HardwareTimer *MyTim_motor3 = new HardwareTimer(Instance_motor3);
+HardwareTimer *MyTim_motor4 = new HardwareTimer(Instance_motor4);
+
 #define triggerPin PC3  // Trigger Pin Ultrasonico
 #define echoPin PC2     // Echo Pin Ultrasonico
 
@@ -319,11 +343,30 @@ void setup() {
 void loop() {
 
   // Compute reference architecture must be added
-  read_units();
-  measurement_processing();
-  controllers();
+  //pid_p_gain_altitude = pid_p_gain_altitude_og + (Mando_canal[5] - 1500.0) / 500.0 * 10 * pid_p_gain_altitude_og; //map(Mando_canal[5], 1000, 2000, -0.01, 0.01);
+
+  //Serial.println(pid_p_gain_altitude, 4);
   actuators();
+  //loop_timer = micros();
+  read_units();
+  //Serial.print(micros() - loop_timer);
+  //Serial.print("\t");
+  //loop_timer = micros();
+  measurement_processing();
+//  Serial.print(micros() - loop_timer);
+//  Serial.print("\t");
+//  loop_timer = micros();
+  controllers();
+//  Serial.print(micros() - loop_timer);
+//  Serial.print("\t");
+//  loop_timer = micros();
+  actuators();
+//  Serial.print(micros() - loop_timer);
+//  Serial.print("\t");
+//  loop_timer = micros();
   diagnostics();
+//  Serial.println(micros() - loop_timer);
+
 
   //manage_throttle();
   //barometer_read();  //To be splitted within read_units and measurement_processing
@@ -332,8 +375,8 @@ void loop() {
     Serial.print("LOOP SLOW");
     Serial.print("\t");
   }
-  while (micros() - loop_timer < 4000)
-    ;
+  Serial.println(micros() - loop_timer);
+  while (micros() - loop_timer < 4000);
   loop_timer = micros();
-  alt_hold_pid();
+  //alt_hold_pid();
 }

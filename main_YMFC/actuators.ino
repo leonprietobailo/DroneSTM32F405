@@ -8,10 +8,11 @@ void actuators() {
     pid_i_mem_altitude = 0;
     pid_last_altitude_d_error = 0;
     throttle_ah = throttle;
+    pid_altitude_setpoint = actual_pressure;
   } else {
-    hoverThrottle = -63.4 * battery_voltage + 2183;
-    //throttle = hoverThrottle - pid_output_altitude;
-    throttle = throttle_ah;
+    hoverThrottle = -63.4 * battery_voltage + 2183 + 20;
+    throttle = hoverThrottle - pid_output_altitude;
+    //throttle = throttle_ah;
   }
 
   act_esc_outputs();
@@ -47,6 +48,25 @@ void act_esc_PWM() {
     if (tiempo_motores_start + esc_3 <= micros()) digitalWrite(pin_motor3, LOW);
     if (tiempo_motores_start + esc_4 <= micros()) digitalWrite(pin_motor4, LOW);
   }
+}
+
+void act_esc_PWM_v2(){
+
+  MyTim_motor1->pause();
+  MyTim_motor2->pause();
+  MyTim_motor3->pause();
+  MyTim_motor4->pause();
+
+  MyTim_motor1->setPWM(channel_motor1, pin_motor1, 250, esc_1 / 40.0);
+  MyTim_motor2->setPWM(channel_motor2, pin_motor2, 250, esc_2 / 40.0);
+  MyTim_motor3->setPWM(channel_motor3, pin_motor3, 250, esc_3 / 40.0);
+  MyTim_motor4->setPWM(channel_motor4, pin_motor4, 250, esc_4 / 40.0);
+
+  MyTim_motor1->resume();
+  MyTim_motor2->resume();
+  MyTim_motor3->resume();
+  MyTim_motor4->resume();
+
 }
 
 
