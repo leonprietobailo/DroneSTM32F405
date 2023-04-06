@@ -49,7 +49,7 @@ float T, P, P_filt;
 int32_t pressure_msb, pressure_lsb, pressure_xlsb, adc_P;
 
 // Pressure signal smoothened
-float pressure_total_avarage, pressure_rotating_mem[12], actual_pressure_fast, actual_pressure_slow, actual_pressure_diff, actual_pressure;
+float pressure_total_avarage, pressure_rotating_mem[12], actual_pressure_fast, actual_pressure_slow = 101325, actual_pressure_diff, actual_pressure;
 uint8_t pressure_rotating_mem_location, barometer_counter;
 
 // Parachute throttle: 
@@ -213,11 +213,11 @@ float pid_i_gain_yaw_in = 0;
 
 
 // BAROMETER PID
-float pid_p_gain_altitude_og = 1.4;
-float pid_i_gain_altitude = 0; //0.2;
-float pid_d_gain_altitude = 0; //0.75;
-int pid_max_altitude = 400;
 float pid_p_gain_altitude = 1.4;
+float pid_i_gain_altitude = 0.2; //0.2;
+float pid_d_gain_altitude = 0.75; //0.75;
+int pid_max_altitude = 30;
+
 
 // ALTITUDE PID V2
 
@@ -377,7 +377,11 @@ void loop() {
     Serial.print("LOOP SLOW");
     Serial.print("\t");
   }
-  Serial.println(micros() - loop_timer);
+
+  
+  //Serial.println(micros() - loop_timer);
+
+  
   while (micros() - loop_timer < 4000);
   loop_timer = micros();
   //alt_hold_pid();

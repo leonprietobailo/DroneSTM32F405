@@ -4,7 +4,7 @@ void controllers() {
   calculate_pid();
   //altitude_pid();
   //altitude_pid_v2();
-  barometer_v2_cnt();
+  //barometer_v2_cnt(); -> Forwarded to read_units
 }
 
 
@@ -245,6 +245,7 @@ void barometer_v2_cnt() {
   //To prevent extreme PID-output the output must be limited.
   if (pid_output_altitude > pid_max_altitude) pid_output_altitude = pid_max_altitude;
   else if (pid_output_altitude < pid_max_altitude * -1) pid_output_altitude = pid_max_altitude * -1;
+
 
 //  throttle_ah -= pid_output_altitude;
 //  throttle_ah = constrain(throttle_ah, 1300, 1700);

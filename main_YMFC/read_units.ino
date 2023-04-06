@@ -151,7 +151,11 @@ void read_barometer_v2() {
     pressure_parachute_previous = actual_pressure * 10;                                                       //Store the current measurement for the next loop.
     parachute_rotating_mem_location++;                                                                        //Increase the rotating memory location.
     if (parachute_rotating_mem_location == 20)parachute_rotating_mem_location = 0;                            //Start at 0 when the memory location 20 is reached.
-    
+
+
+
+
+    barometer_v2_cnt(); // RUN BAROMETER CONTROLLER
     barometer_counter = 0;
   }
   barometer_counter++;
