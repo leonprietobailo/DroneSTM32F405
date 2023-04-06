@@ -11,7 +11,17 @@
 #include <Wire.h>
 #include "LowPass.h"
 
+// FLIGHT MODE ENUMERATION AND INITIALIZATION
 
+enum FlightMode{
+  FM_disabled,
+  FM_mounting,
+  FM_stable,
+  FM_alt_hold,
+  FM_loiter
+};
+
+FlightMode fm = FM_disabled;
 
 // BMP280 VARIABLES:
 
@@ -253,7 +263,7 @@ int16_t manual_z_cal_value = 0;
 uint8_t gyro_address = 0x68;
 
 uint8_t last_channel_1, last_channel_2, last_channel_3, last_channel_4;
-uint8_t highByte, lowByte, flip32, start, warning;
+uint8_t highByte, lowByte, flip32, warning;
 uint8_t error, error_counter, error_led;
 
 int16_t esc_1, esc_2, esc_3, esc_4;
@@ -350,6 +360,7 @@ void loop() {
   //Serial.println(pid_p_gain_altitude, 4);
   actuators();
   //loop_timer = micros();
+  reference_computation();  
   read_units();
   //Serial.print(micros() - loop_timer);
   //Serial.print("\t");

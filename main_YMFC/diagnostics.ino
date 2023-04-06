@@ -90,6 +90,11 @@ void diag_print() {
 // Serial.print(pid_altitude_input);
 // Serial.print("\t");
 // Serial.println(pid_output_altitude);
+
+  
+  Serial.print(pid_altitude_setpoint);
+  Serial.print("\t");
+  Serial.println(actual_pressure);
  
 
 }

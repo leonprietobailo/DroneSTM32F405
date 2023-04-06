@@ -2,19 +2,6 @@
 void actuators() {
 
   act_esc_PWM_v2();
-
-  if (Mando_canal[6] < 1500) {
-    throttle = Mando_canal[3];
-    pid_i_mem_altitude = 0;
-    pid_last_altitude_d_error = 0;
-    throttle_ah = throttle;
-    pid_altitude_setpoint = actual_pressure;
-  } else {
-    hoverThrottle = -63.4 * battery_voltage + 2183 + 20;
-    throttle = hoverThrottle + pid_output_altitude;
-    //throttle = throttle_ah;
-  }
-
   act_esc_outputs();
   act_us_pulse();
 }
@@ -75,22 +62,21 @@ void act_esc_PWM_v2(){
 
 
 void act_esc_outputs() {
-  if (start == 2) {                                                          //The motors are started.
-    if (throttle > 1800) throttle = 1800;                                    //We need some room to keep full control at full throttle.
-    esc_1 = throttle - pid_output_pitch - pid_output_roll - pid_output_yaw;  //Calculate the pulse for esc 1 (front-right - CCW).
-    esc_2 = throttle + pid_output_pitch - pid_output_roll + pid_output_yaw;  //Calculate the pulse for esc 2 (rear-right - CW).
-    esc_3 = throttle + pid_output_pitch + pid_output_roll - pid_output_yaw;  //Calculate the pulse for esc 3 (rear-left - CCW).
-    esc_4 = throttle - pid_output_pitch + pid_output_roll + pid_output_yaw;  //Calculate the pulse for esc 4 (front-left - CW).
+  if (fm == FM_stable) {                                                      
+    if (throttle > 1800) throttle = 1800;                                  
+    esc_1 = throttle - pid_output_pitch - pid_output_roll - pid_output_yaw;
+    esc_2 = throttle + pid_output_pitch - pid_output_roll + pid_output_yaw;
+    esc_3 = throttle + pid_output_pitch + pid_output_roll - pid_output_yaw;
+    esc_4 = throttle - pid_output_pitch + pid_output_roll + pid_output_yaw;
+  }
 
-    if (esc_1 < 1000) esc_1 = 950;  //Keep the motors running.
-    if (esc_2 < 1000) esc_2 = 950;  //Keep the motors running.
-    if (esc_3 < 1000) esc_3 = 950;  //Keep the motors running.
-    if (esc_4 < 1000) esc_4 = 950;  //Keep the motors running.
+  else if (fm == FM_alt_hold){
 
-    if (esc_1 > 2000) esc_1 = 2000;  //Limit the esc-1 pulse to 2000us.
-    if (esc_2 > 2000) esc_2 = 2000;  //Limit the esc-2 pulse to 2000us.
-    if (esc_3 > 2000) esc_3 = 2000;  //Limit the esc-3 pulse to 2000us.
-    if (esc_4 > 2000) esc_4 = 2000;  //Limit the esc-4 pulse to 2000us.
+    if (throttle > 1800) throttle = 1800;
+    esc_1 = throttle + pid_output_altitude - pid_output_pitch - pid_output_roll - pid_output_yaw;
+    esc_2 = throttle + pid_output_altitude + pid_output_pitch - pid_output_roll + pid_output_yaw;
+    esc_3 = throttle + pid_output_altitude + pid_output_pitch + pid_output_roll - pid_output_yaw;
+    esc_4 = throttle + pid_output_altitude - pid_output_pitch + pid_output_roll + pid_output_yaw;
   }
 
   else {
@@ -99,6 +85,16 @@ void act_esc_outputs() {
     esc_3 = 1000;  //If start is not 2 keep a 1000us pulse for ess-3.
     esc_4 = 1000;  //If start is not 2 keep a 1000us pulse for ess-4.
   }
+
+  if (esc_1 < 1000) esc_1 = 950;  //Keep the motors running.
+  if (esc_2 < 1000) esc_2 = 950;  //Keep the motors running.
+  if (esc_3 < 1000) esc_3 = 950;  //Keep the motors running.
+  if (esc_4 < 1000) esc_4 = 950;  //Keep the motors running.
+
+  if (esc_1 > 2000) esc_1 = 2000;  //Limit the esc-1 pulse to 2000us.
+  if (esc_2 > 2000) esc_2 = 2000;  //Limit the esc-2 pulse to 2000us.
+  if (esc_3 > 2000) esc_3 = 2000;  //Limit the esc-3 pulse to 2000us.
+  if (esc_4 > 2000) esc_4 = 2000;  //Limit the esc-4 pulse to 2000us.
 }
 
 
