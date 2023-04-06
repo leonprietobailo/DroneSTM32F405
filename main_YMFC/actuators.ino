@@ -11,7 +11,7 @@ void actuators() {
     pid_altitude_setpoint = actual_pressure;
   } else {
     hoverThrottle = -63.4 * battery_voltage + 2183 + 20;
-    throttle = hoverThrottle - pid_output_altitude;
+    throttle = hoverThrottle + pid_output_altitude;
     //throttle = throttle_ah;
   }
 
