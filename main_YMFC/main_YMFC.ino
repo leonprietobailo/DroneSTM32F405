@@ -358,7 +358,7 @@ void loop() {
   //pid_p_gain_altitude = pid_p_gain_altitude_og + (Mando_canal[5] - 1500.0) / 500.0 * 10 * pid_p_gain_altitude_og; //map(Mando_canal[5], 1000, 2000, -0.01, 0.01);
 
   //Serial.println(pid_p_gain_altitude, 4);
-  actuators();
+  //actuators();
   //loop_timer = micros();
   reference_computation();  
   read_units();
