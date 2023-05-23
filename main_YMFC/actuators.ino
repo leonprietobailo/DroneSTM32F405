@@ -1,8 +1,8 @@
 
 void actuators() {
 
-  act_esc_PWM_v2();
   act_esc_outputs();
+  act_esc_PWM_v2();
   act_us_pulse();
 }
 
