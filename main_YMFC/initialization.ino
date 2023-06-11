@@ -55,7 +55,7 @@ void init_gyro(void) {
   Wire.begin();                          //Start the I2C as master
   Wire.beginTransmission(gyro_address);  //Start communication with the MPU-6050.
   error = Wire.endTransmission();        //End the transmission and register the exit status.
-  while (error != 0) {                   //Stay in this loop because the MPU-6050 did not responde.
+  while (error != 0) {                   //Stay in this loop because the MPU-6050 did not respond.
     delay(4);
   }
 

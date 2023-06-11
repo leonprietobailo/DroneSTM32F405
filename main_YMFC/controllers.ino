@@ -57,6 +57,7 @@ void pid_attitude_sp() {
 
 void calculate_pid(void) {
   //Roll calculations
+  float pid_i_gain_roll_in;
   if (distance > 25) {
     pid_i_gain_roll_in = pid_i_gain_roll;
   } else {
@@ -75,6 +76,7 @@ void calculate_pid(void) {
   pid_last_roll_d_error = pid_error_temp;
 
   //Pitch calculations
+  float pid_i_gain_pitch_in;
   if (distance > 25) {
     pid_i_gain_pitch_in = pid_i_gain_pitch;
   } else {
@@ -93,6 +95,7 @@ void calculate_pid(void) {
   pid_last_pitch_d_error = pid_error_temp;
 
   //Yaw calculations
+  float pid_i_gain_yaw_in;
   if (distance > 25) {
     pid_i_gain_yaw_in = pid_i_gain_yaw;
   } else {
@@ -155,7 +158,7 @@ void altitude_pid() {
   pid_last_altitude_d_error = pid_error_temp_altitude;
 }
 
-void altitude_pid_v2() {
+/* void altitude_pid_v2() {
 
   pid_altitude_v2_input = distance;                         // Measurements comming from sensor [cm]
   pid_error_temp_altitude_v2 = pid_altitude_v2_input - 60;  // Control error signal generation. Meas - Reference.
@@ -182,9 +185,9 @@ void altitude_pid_v2() {
 
   throttle_ah -= pid_output_altitude_v2;
 }
+ */
 
-
-void alt_hold_pid() {
+/* void alt_hold_pid() {
   // 50 hz PID control. Schematic used: https://ardupilot.org/copter/docs/altholdmode.html
   if (micros() - last_alt_hold_PID > 20000) {
 
@@ -214,7 +217,7 @@ void alt_hold_pid() {
     // /\/\/\ PART AVOBE TO BE DELETED /\/\/\
   }
   }
-}
+} */
 
 
 void barometer_v2_cnt() {
