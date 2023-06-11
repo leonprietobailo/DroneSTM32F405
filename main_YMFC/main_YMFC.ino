@@ -6,8 +6,7 @@ enum FlightMode{
   FM_disabled,
   FM_mounting,
   FM_stable,
-  FM_alt_hold,
-  FM_loiter
+  FM_alt_hold
 };
 
 FlightMode fm = FM_disabled;
