@@ -214,7 +214,7 @@ void setup() {
 void loop() {
 
   reference_computation();  
-  read_units();
+  read_process_units();
   controllers();
   actuators();
   diagnostics();
