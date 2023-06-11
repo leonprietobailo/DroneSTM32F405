@@ -1,31 +1,13 @@
 void read_units() {
-
-  //loop_timer = micros();
   read_battery();
-  //Serial.print(micros() - loop_timer);
-  //Serial.print("\t");
-  //loop_timer = micros();
   read_rc();
-  //Serial.print(micros() - loop_timer);
-  //Serial.print("\t");
-  //loop_timer = micros();
   read_gyro();
-  //Serial.print(micros() - loop_timer);
-  //Serial.print("\t");
-  //loop_timer = micros();
-  read_barometer_v2();
-  //Serial.println(micros() - loop_timer);
+  process_gyro();
+  read_barometer();
 }
 
-
-
 void read_battery(void) {
-  //The battery voltage is needed for compensation.
-  //A complementary filter is used to reduce noise.
-  //1410.1 = 112.81 / 0.08.
   battery_voltage = battery_voltage * 0.92 + ((float)analogRead(PA7) / 352.27 * 0.9838);
-
-  //Turn on the led if battery voltage is to low. In this case under 10.0V
   if (battery_voltage < 10.0 && error == 0) error = 1;
 }
 
@@ -38,70 +20,74 @@ void read_rc() {
 }
 
 void read_gyro(void) {
-  Wire.beginTransmission(gyro_address);          //Start communication with the gyro.
-  Wire.write(0x3B);                              //Start reading @ register 43h and auto increment with every read.
-  Wire.endTransmission();                        //End the transmission.
-  Wire.requestFrom(gyro_address, 14);            //Request 14 bytes from the MPU 6050.
-  acc_x = Wire.read() << 8 | Wire.read();        //Add the low and high byte to the acc_x variable.
-  acc_y = Wire.read() << 8 | Wire.read();        //Add the low and high byte to the acc_y variable.
-  acc_z = Wire.read() << 8 | Wire.read();        //Add the low and high byte to the acc_z variable.
-  temperature = Wire.read() << 8 | Wire.read();  //Add the low and high byte to the temperature variable.
-  gyro_pitch = Wire.read() << 8 | Wire.read();   //Read high and low part of the angular data.
-  gyro_roll = Wire.read() << 8 | Wire.read();    //Read high and low part of the angular data.
-  gyro_yaw = Wire.read() << 8 | Wire.read();     //Read high and low part of the angular data.
-  //gyro_pitch *= -1;                                          //Invert the direction of the axis.
+  Wire.beginTransmission(MPU6050_ADDRESS);
+  Wire.write(MPU6050_ACCEL_XOUT_H);
+  Wire.endTransmission();
+  Wire.requestFrom(MPU6050_ADDRESS, 14);
+  acc_x = Wire.read() << 8 | Wire.read();
+  acc_y = Wire.read() << 8 | Wire.read();
+  acc_z = Wire.read() << 8 | Wire.read();
+  temperature = Wire.read() << 8 | Wire.read();
+  gyro_pitch = Wire.read() << 8 | Wire.read();
+  gyro_roll = Wire.read() << 8 | Wire.read();
+  gyro_yaw = Wire.read() << 8 | Wire.read();
+  //gyro_pitch *= -1;
   gyro_roll *= -1;
-  gyro_yaw *= -1;               //Invert the direction of the axis.
-  acc_x -= manual_x_cal_value;  //Subtact the manual accelerometer pitch calibration value.
-  acc_y -= manual_y_cal_value;  //Subtact the manual accelerometer roll calibration value.
+  gyro_yaw *= -1;
+  acc_x -= manual_x_cal_value;
+  acc_y -= manual_y_cal_value;
   acc_z -= manual_z_cal_value;
-  gyro_roll -= manual_gyro_roll_cal_value;    //Subtact the manual gyro roll calibration value.
-  gyro_pitch -= manual_gyro_pitch_cal_value;  //Subtact the manual gyro pitch calibration value.
-  gyro_yaw -= manual_gyro_yaw_cal_value;      //Subtact the manual gyro yaw calibration value.
+  gyro_roll -= manual_gyro_roll_cal_value;
+  gyro_pitch -= manual_gyro_pitch_cal_value;
+  gyro_yaw -= manual_gyro_yaw_cal_value;
 }
 
-///////////////////////////////////////////////////////////////////////
-/// FUNCTIONS TRIGGERED BY INTERRUPTIONS [CHECK initialization.ino] ///
-///////////////////////////////////////////////////////////////////////
+void process_gyro() {
+
+  //65.5 = 1 deg/sec (check the datasheet of the MPU-6050 for more information).
+  gyro_roll_input = (gyro_roll_input * 0.7) + (((float)gyro_roll / 65.5) * 0.3);     //Gyro pid input is deg/sec.
+  gyro_pitch_input = (gyro_pitch_input * 0.7) + (((float)gyro_pitch / 65.5) * 0.3);  //Gyro pid input is deg/sec.
+  gyro_yaw_input = (gyro_yaw_input * 0.7) + (((float)gyro_yaw / 65.5) * 0.3);        //Gyro pid input is deg/sec.
 
 
-/// Must be splitted -> Measurement Processing
-void read_ultrasonic() {
-  if (pulseSent) {
-    if (digitalRead(echoPin) == HIGH) {
-      pulseStart = micros();
-    } else {
-      pulseEnd = micros();
-      duration = pulseEnd - pulseStart;
-      computedDistance = duration / 1e6 * cAir * 1e2 / 2.0;  // distance = duration [us] / 1e6 [us/s] * speedOfSound [m/s] * 1e2 [cm/m] / 2 (go and back] || [cm]
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
+  //This is the added IMU code from the videos:
+  //https://youtu.be/4BoIE8YQwM8
+  //https://youtu.be/j-kE0AMEWy4
+  ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      if (computedDistance < 10) {
-        computedDistance = 10;
-      }
-      if (computedDistance < 200) {
-        prevDistance = distance;
-        prevDistanceFilt = distanceFilt;
-        distance = computedDistance;  //0.95 * distance + 0.05 * computedDistance;
-        distanceFilt = lp.filt(distance);
-        velocity_raw = (distance - prevDistance) / (micros() - timeLast) * 1e6;
-        velocityFilt = velocityFilt * 0.8 + 0.2 * (distanceFilt - prevDistanceFilt) / (micros() - timeLast) * 1e6;
-        velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6;
+  //Gyro angle calculations
+  //0.0000611 = 1 / (250Hz / 65.5)
+  angle_pitch += (float)gyro_pitch * 0.0000611;  //Calculate the traveled pitch angle and add this to the angle_pitch variable.
+  angle_roll += (float)gyro_roll * 0.0000611;    //Calculate the traveled roll angle and add this to the angle_roll variable.
 
-        timeLast = micros();
-      }
-      pulseSent = false;
-    }
+  //0.000001066 = 0.0000611 * (3.142(PI) / 180degr) The Arduino sin function is in radians and not degrees.
+  angle_pitch -= angle_roll * sin((float)gyro_yaw * 0.000001066);  //If the IMU has yawed transfer the roll angle to the pitch angel.
+  angle_roll += angle_pitch * sin((float)gyro_yaw * 0.000001066);  //If the IMU has yawed transfer the pitch angle to the roll angel.
+
+  //Accelerometer angle calculations
+  acc_total_vector = sqrt((acc_x * acc_x) + (acc_y * acc_y) + (acc_z * acc_z));  //Calculate the total accelerometer vector.
+
+  if (abs(acc_y) < acc_total_vector) {                                 //Prevent the asin function to produce a NaN.
+    angle_pitch_acc = asin((float)acc_y / acc_total_vector) * 57.296;  //Calculate the pitch angle.
+  }
+  if (abs(acc_x) < acc_total_vector) {                                //Prevent the asin function to produce a NaN.
+    angle_roll_acc = asin((float)acc_x / acc_total_vector) * 57.296;  //Calculate the roll angle.
+  }
+
+  angle_pitch = angle_pitch * 0.9996 + angle_pitch_acc * 0.0004;  //Correct the drift of the gyro pitch angle with the accelerometer pitch angle.
+  angle_roll = angle_roll * 0.9996 + angle_roll_acc * 0.0004;     //Correct the drift of the gyro roll angle with the accelerometer roll angle.
+
+  pitch_level_adjust = angle_pitch * 15;  //Calculate the pitch angle correction.
+  roll_level_adjust = angle_roll * 15;    //Calculate the roll angle correction.
+
+  if (!auto_level) {         //If the quadcopter is not in auto-level mode
+    pitch_level_adjust = 0;  //Set the pitch angle correction to zero.
+    roll_level_adjust = 0;   //Set the roll angle correcion to zero.
   }
 }
 
-void read_PPM() {
-  if (micros() - pulso_instante[contador_flaco - 1] > 2500) contador_flaco = 0;
-  pulso_instante[contador_flaco] = micros();
-  contador_flaco++;
-}
-
-
-void read_barometer_v2() {
+void read_barometer() {
   if (barometer_counter == 2) {
     Wire.beginTransmission(BMP280_ADDRESS);
     Wire.write(BMP280_REGISTER_PRESSURE_MSB);
@@ -109,8 +95,6 @@ void read_barometer_v2() {
   }
 
   if (barometer_counter == 4) {
-
-    // Burst request of pressure and temperature:
     Wire.requestFrom(BMP280_ADDRESS, 6);
 
     pressure_msb = Wire.read();
@@ -144,18 +128,13 @@ void read_barometer_v2() {
     if (actual_pressure_diff > 1 || actual_pressure_diff < -1) actual_pressure_slow -= actual_pressure_diff / 6.0;
     actual_pressure = actual_pressure_slow;
 
-    // LONG TERM VARIATION
-    parachute_throttle -= parachute_buffer[parachute_rotating_mem_location];                                  //Subtract the current memory position to make room for the new value.
-    parachute_buffer[parachute_rotating_mem_location] = actual_pressure * 10 - pressure_parachute_previous;   //Calculate the new change between the actual pressure and the previous measurement.
-    parachute_throttle += parachute_buffer[parachute_rotating_mem_location];                                  //Add the new value to the long term avarage value.
-    pressure_parachute_previous = actual_pressure * 10;                                                       //Store the current measurement for the next loop.
-    parachute_rotating_mem_location++;                                                                        //Increase the rotating memory location.
-    if (parachute_rotating_mem_location == 20)parachute_rotating_mem_location = 0;                            //Start at 0 when the memory location 20 is reached.
+    parachute_throttle -= parachute_buffer[parachute_rotating_mem_location];
+    parachute_buffer[parachute_rotating_mem_location] = actual_pressure * 10 - pressure_parachute_previous;
+    parachute_throttle += parachute_buffer[parachute_rotating_mem_location];
+    pressure_parachute_previous = actual_pressure * 10;
+    parachute_rotating_mem_location++;
+    if (parachute_rotating_mem_location == 20)parachute_rotating_mem_location = 0;
 
-
-
-
-    barometer_v2_cnt(); // RUN BAROMETER CONTROLLER
     barometer_counter = 0;
   }
   barometer_counter++;
@@ -185,4 +164,43 @@ void bmp280_compensate_P_int64() {
     p_32 = (int32_t)p;
     P = float(p_32) / 256.0;
   }
+}
+
+
+///////////////////////////////////////////////////////////////////////
+/// FUNCTIONS TRIGGERED BY INTERRUPTIONS                            ///
+///////////////////////////////////////////////////////////////////////
+
+void read_ultrasonic() {
+  if (pulseSent) {
+    if (digitalRead(echoPin) == HIGH) {
+      pulseStart = micros();
+    } else {
+      pulseEnd = micros();
+      duration = pulseEnd - pulseStart;
+      computedDistance = duration / 1e6 * cAir * 1e2 / 2.0;
+
+      if (computedDistance < 10) {
+        computedDistance = 10;
+      }
+      if (computedDistance < 200) {
+        prevDistance = distance;
+        prevDistanceFilt = distanceFilt;
+        distance = computedDistance;
+        distanceFilt = lp.filt(distance);
+        velocity_raw = (distance - prevDistance) / (micros() - timeLast) * 1e6;
+        velocityFilt = velocityFilt * 0.8 + 0.2 * (distanceFilt - prevDistanceFilt) / (micros() - timeLast) * 1e6;
+        velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6;
+
+        timeLast = micros();
+      }
+      pulseSent = false;
+    }
+  }
+}
+
+void read_PPM() {
+  if (micros() - pulso_instante[contador_flaco - 1] > 2500) contador_flaco = 0;
+  pulso_instante[contador_flaco] = micros();
+  contador_flaco++;
 }

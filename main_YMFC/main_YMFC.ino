@@ -140,7 +140,13 @@ float pid_d_gain_altitude = 0.75; //0.75;
 int pid_max_altitude = 30;
 
 // MPU6050: Address, setup and callibration
-uint8_t gyro_address = 0x68;
+
+#define MPU6050_ADDRESS 0x68                  
+#define MPU6050_ACCEL_XOUT_H 0x3B
+#define MPU6050_PWR_MGMT_1 0x6B
+#define MPU6050_GYRO_CONFIG 0x1B
+#define MPU6050_ACCEL_CONFIG 0x1C
+#define MPU6050_CONFIG 0x1A
 
 boolean auto_level = true;
 int16_t manual_acc_pitch_cal_value = 0;
@@ -167,7 +173,6 @@ float angle_roll_acc, angle_pitch_acc, angle_pitch, angle_roll;
 #define pin_motor3 PB9  // Pin motor 3  GPIO 10
 #define pin_motor4 PB8  // Pin motor 4  GPIO 9
 int16_t esc_1, esc_2, esc_3, esc_4;
-float hoverThrottle;
 
 TIM_TypeDef *TIM_DEF_M1_M2 = TIM3;
 TIM_TypeDef *TIM_DEF_M3_M4 = TIM4;
@@ -210,7 +215,6 @@ void loop() {
 
   reference_computation();  
   read_units();
-  measurement_processing();
   controllers();
   actuators();
   diagnostics();
