@@ -186,11 +186,10 @@ uint32_t loop_timer;
 // Error signal
 uint8_t error;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Setup routine
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Setup routine
 void setup() {
-  Serial.begin(57600);  //Set the serial output to 57600 kbps. (for debugging only)
+  Serial.begin(57600);
   delay(5000);
   
   init_components();
@@ -204,53 +203,22 @@ void setup() {
   loop_timer = micros();
   led_on();
   Serial.println("Setup finished");
-  //init_pwms();
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Main program loop
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Main routine
 void loop() {
 
-  // Compute reference architecture must be added
-  //pid_p_gain_altitude = pid_p_gain_altitude_og + (Mando_canal[5] - 1500.0) / 500.0 * 10 * pid_p_gain_altitude_og; //map(Mando_canal[5], 1000, 2000, -0.01, 0.01);
-
-  //Serial.println(pid_p_gain_altitude, 4);
-  //actuators();
-  //loop_timer = micros();
   reference_computation();  
   read_units();
-  //Serial.print(micros() - loop_timer);
-  //Serial.print("\t");
-  //loop_timer = micros();
   measurement_processing();
-//  Serial.print(micros() - loop_timer);
-//  Serial.print("\t");
-//  loop_timer = micros();
   controllers();
-//  Serial.print(micros() - loop_timer);
-//  Serial.print("\t");
-//  loop_timer = micros();
   actuators();
-//  Serial.print(micros() - loop_timer);
-//  Serial.print("\t");
-//  loop_timer = micros();
   diagnostics();
-//  Serial.println(micros() - loop_timer);
-
-
-  //manage_throttle();
-  //barometer_read();  //To be splitted within read_units and measurement_processing
 
   if (micros() - loop_timer > 4050) {
-    Serial.print("LOOP SLOW");
-    Serial.print("\t");
+    Serial.println("LOOP SLOW");
   }
-  
-  //Serial.println(micros() - loop_timer);
-
   
   while (micros() - loop_timer < 4000);
   loop_timer = micros();
-  //alt_hold_pid();
 }
