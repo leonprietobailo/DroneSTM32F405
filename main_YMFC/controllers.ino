@@ -1,25 +1,11 @@
 
 void controllers() {
-  pid_attitude_sp();
-  calculate_pid();
-  //altitude_pid();
-  //altitude_pid_v2();
-  barometer_v2_cnt();
+  cnt_attitude_sp();
+  cnt_attitude_pid();
+  cnt_altitude_pid();
 }
 
-
-
-
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Subroutine for calculating pid outputs
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//The PID controllers are explained in part 5 of the YMFC-3D video session:
-//https://youtu.be/JBvnB0279-Q
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void pid_attitude_sp() {
+void cnt_attitude_sp() {
   //The PID set point in degrees per second is determined by the roll receiver input.
   //In the case of deviding by 3 the max roll rate is aprox 164 degrees per second ( (500-8)/3 = 164d/s ).
   pid_roll_setpoint = 0;
@@ -51,11 +37,7 @@ void pid_attitude_sp() {
   }
 }
 
-
-
-
-
-void calculate_pid(void) {
+void cnt_attitude_pid() {
   //Roll calculations
   float pid_i_gain_roll_in;
   if (distance > 25) {
@@ -114,143 +96,23 @@ void calculate_pid(void) {
   pid_last_yaw_d_error = pid_error_temp;
 }
 
-
-
-float pid_error_temp_altitude, pid_error_temp_altitude_v2, increasing_P_gain_altitude;
-
-void altitude_pid() {
-  // Altitude calculations
-
-
-  //Calculate the PID output of the altitude hold.
-  pid_altitude_input = distance;                      //Set the setpoint (pid_altitude_input) of the PID-controller.
-  pid_error_temp_altitude = pid_altitude_input - 45;  // Setpoint                   //Calculate the error between the setpoint and the actual pressure value.
-
-  //To get better results the P-gain is increased when the error between the setpoint and the actual pressure value increases.
-  //The variable pid_error_gain_altitude will be used to adjust the P-gain of the PID-controller.
-  //  pid_error_gain_altitude = 0;                                                   //Set the pid_error_gain_altitude to 0.
-  //  if (pid_error_temp_altitude > 10 || pid_error_temp_altitude < -10) {                             //If the error between the setpoint and the actual pressure is larger than 10 or smaller then -10.
-  //    pid_error_gain_altitude = (abs(pid_error_temp_altitude) - 10) / 20.0;                 //The positive pid_error_gain_altitude variable is calculated based based on the error.
-  //    if (pid_error_gain_altitude > 3)pid_error_gain_altitude = 3;                 //To prevent extreme P-gains it must be limited to 3.
-  //  }
-
-
-  increasing_P_gain_altitude = 0.025 * abs(pid_error_temp_altitude);
-  if (increasing_P_gain_altitude > 1.5) increasing_P_gain_altitude = 1.5;
-  increasing_P_gain_altitude = 0;
-
-
-  //In the following section the I-output is calculated. It's an accumulation of errors over time.
-  //The time factor is removed as the program loop runs at 250Hz.
-  pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude;
-  if (pid_i_mem_altitude > pid_max_altitude) pid_i_mem_altitude = pid_max_altitude;
-  else if (pid_i_mem_altitude < pid_max_altitude * -1) pid_i_mem_altitude = pid_max_altitude * -1;
-  //In the following line the PID-output is calculated.
-  //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp_altitude.
-  //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude (see above).
-  //D = pid_d_gain_altitude * parachute_throttle.
-  pid_output_altitude = (pid_p_gain_altitude + increasing_P_gain_altitude) * pid_error_temp_altitude + pid_i_mem_altitude + pid_d_gain_altitude * (pid_error_temp_altitude - pid_last_altitude_d_error);  // + pid_d_gain_altitude * parachute_throttle;
-
-  //To prevent extreme PID-output the output must be limited.
-  if (pid_output_altitude > pid_max_altitude) pid_output_altitude = pid_max_altitude;
-  else if (pid_output_altitude < pid_max_altitude * -1) pid_output_altitude = pid_max_altitude * -1;
-
-  pid_last_altitude_d_error = pid_error_temp_altitude;
-}
-
-/* void altitude_pid_v2() {
-
-  pid_altitude_v2_input = distance;                         // Measurements comming from sensor [cm]
-  pid_error_temp_altitude_v2 = pid_altitude_v2_input - 60;  // Control error signal generation. Meas - Reference.
-
-
-
-  //In the following section the I-output is calculated. It's an accumulation of errors over time.
-  //The time factor is removed as the program loop runs at 250Hz.
-  pid_i_mem_altitude_v2 += (pid_i_gain_altitude_v2 / 100.0) * pid_error_temp_altitude_v2;
-  if (pid_i_mem_altitude_v2 > pid_max_altitude_v2) pid_i_mem_altitude_v2 = pid_max_altitude_v2;
-  else if (pid_i_mem_altitude_v2 < pid_max_altitude_v2 * -1) pid_i_mem_altitude_v2 = pid_max_altitude_v2 * -1;
-
-  //In the following line the PID-output is calculated.
-  //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp_altitude.
-  //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp_altitude (see above).
-  //D = pid_d_gain_altitude * parachute_throttle.
-  pid_output_altitude_v2 = (pid_p_gain_altitude_v2)*pid_error_temp_altitude_v2 + pid_i_mem_altitude_v2 + pid_d_gain_altitude_v2 * (pid_error_temp_altitude_v2 - pid_last_altitude_v2_d_error);  // + pid_d_gain_altitude * parachute_throttle;
-
-  //To prevent extreme PID-output the output must be limited.
-  //if (pid_output_altitude_v2 > pid_max_altitude_v2)pid_output_altitude_v2 = pid_max_altitude_v2;
-  //else if (pid_output_altitude_v2 < pid_max_altitude_v2 * -1)pid_output_altitude_v2 = pid_max_altitude_v2 * -1;
-
-  pid_last_altitude_v2_d_error = pid_error_temp_altitude_v2;
-
-  throttle_ah -= pid_output_altitude_v2;
-}
- */
-
-/* void alt_hold_pid() {
-  // 50 hz PID control. Schematic used: https://ardupilot.org/copter/docs/altholdmode.html
-  if (micros() - last_alt_hold_PID > 20000) {
-
-    // First we have a proportional controller which maps the distance off target into desired vertical speed
-    pid_t_control_error = distanceFilt - 60;
-    pid_t_output = pid_t_control_error * THR_ALT_P;
-
-    throttle_ah += pid_t_output;
-
-
-    // \/\/\/ PART BELOW TO BE DELETED \/\/\/
-    // Reason: Velocity signal comming from ultrasonic sensor is
-
-    // Increase constrain after tests
-    constrain(pid_t_output, -80, 80);
-
-    pid_rate_control_error = velocityFilt - pid_t_output;
-    pid_i_mem_rate += pid_rate_control_error;
-    constrain(pid_i_mem_rate, -200, 200);
-
-    pid_output_rate = RATE_THR_P * pid_rate_control_error + RATE_THR_I * pid_i_mem_rate + RATE_THR_D * (pid_rate_control_error - pid_rate_error_prev);
-
-    pid_rate_error_prev = pid_rate_control_error;
-
-    last_alt_hold_PID = micros();
-
-    // /\/\/\ PART AVOBE TO BE DELETED /\/\/\
-  }
-  }
-} */
-
-
-void barometer_v2_cnt() {
+void cnt_altitude_pid() {
 
   if (barometer_counter == 1) {
-  //Calculate the PID output of the altitude hold.
-  pid_altitude_input = actual_pressure;                         //Set the setpoint (pid_altitude_input) of the PID-controller.
-  pid_error_temp = pid_altitude_input - pid_altitude_setpoint;  //Calculate the error between the setpoint and the actual pressure value.
+  pid_altitude_input = actual_pressure;
+  pid_error_temp = pid_altitude_input - pid_altitude_setpoint;
 
-  //To get better results the P-gain is increased when the error between the setpoint and the actual pressure value increases.
-  //The variable pid_error_gain_altitude will be used to adjust the P-gain of the PID-controller.
-  pid_error_gain_altitude = 0;                                     //Set the pid_error_gain_altitude to 0.
-  if (pid_error_temp > 10 || pid_error_temp < -10) {               //If the error between the setpoint and the actual pressure is larger than 10 or smaller then -10.
-    pid_error_gain_altitude = (abs(pid_error_temp) - 10) / 20.0;   //The positive pid_error_gain_altitude variable is calculated based based on the error.
-    if (pid_error_gain_altitude > 3) pid_error_gain_altitude = 3;  //To prevent extreme P-gains it must be limited to 3.
+  pid_error_gain_altitude = 0;
+  if (pid_error_temp > 10 || pid_error_temp < -10) {
+    pid_error_gain_altitude = (abs(pid_error_temp) - 10) / 20.0;
+    if (pid_error_gain_altitude > 3) pid_error_gain_altitude = 3;
   }
 
-  //In the following section the I-output is calculated. It's an accumulation of errors over time.
-  //The time factor is removed as the program loop runs at 250Hz.
   pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp;
   if (pid_i_mem_altitude > pid_max_altitude) pid_i_mem_altitude = pid_max_altitude;
   else if (pid_i_mem_altitude < pid_max_altitude * -1) pid_i_mem_altitude = pid_max_altitude * -1;
-  //In the following line the PID-output is calculated.
-  //P = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp.
-  //I = pid_i_mem_altitude += (pid_i_gain_altitude / 100.0) * pid_error_temp (see above).
-  //D = pid_d_gain_altitude * parachute_throttle.
   pid_output_altitude = (pid_p_gain_altitude + pid_error_gain_altitude) * pid_error_temp + pid_i_mem_altitude + pid_d_gain_altitude * parachute_throttle;
-  //To prevent extreme PID-output the output must be limited.
   if (pid_output_altitude > pid_max_altitude) pid_output_altitude = pid_max_altitude;
   else if (pid_output_altitude < pid_max_altitude * -1) pid_output_altitude = pid_max_altitude * -1;
-
-
-//  throttle_ah -= pid_output_altitude;
-//  throttle_ah = constrain(throttle_ah, 1300, 1700);
   }
 }
