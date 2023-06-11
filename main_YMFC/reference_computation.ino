@@ -1,9 +1,9 @@
 void reference_computation(){
-	ref_set_mode();
+	ref_mode_management();
 	ref_gen();
 }
 
-void ref_set_mode(){
+void ref_mode_management(){
 	if (Mando_canal[3] < 1100 && Mando_canal[4] < 1100) fm = FM_mounting;
 	if (fm == FM_mounting && Mando_canal[3] < 1100 && Mando_canal[4] > 1450) fm = FM_stable;
 	if (fm >=2 && Mando_canal[3] < 1050 && Mando_canal[4] > 1950) fm = FM_disabled;
@@ -32,12 +32,10 @@ void ref_gen(){
 		throttle = Mando_canal[3];
 	    pid_i_mem_altitude = 0;
 	    pid_last_altitude_d_error = 0;
-	    //throttle_ah = throttle;
 	    pid_altitude_setpoint = actual_pressure;
 	}
 
 	if(fm == FM_alt_hold){
-		//hoverThrottle = -63.4 * battery_voltage + 2203;
     	throttle = -63.4 * battery_voltage + 2203;
 
     	// [IMPORTANT] To be changed, moving up or down shall be done disabling and resetting altitude hold PID and just adding smooth 
