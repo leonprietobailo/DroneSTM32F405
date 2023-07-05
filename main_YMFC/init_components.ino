@@ -6,8 +6,7 @@ void init_components() {
   init_rc();
   init_esc();
   init_gyro();
-  //init_barometer();
-  init_barometer_v2();
+  init_barometer();
 }
 
 
@@ -32,10 +31,10 @@ void init_led() {
 }
 
 void init_ultrasonic() {
-  pinMode(triggerPin, OUTPUT);  // Sets the trigPin as an OUTPUT
-  digitalWrite(triggerPin, LOW);
-  pinMode(echoPin, INPUT);  // Sets the echoPin as an INPUT
-  attachInterrupt(digitalPinToInterrupt(echoPin), read_ultrasonic, CHANGE);
+  pinMode(trigger_pin, OUTPUT);  // Sets the trigPin as an OUTPUT
+  digitalWrite(trigger_pin, LOW);
+  pinMode(echo_pin, INPUT);  // Sets the echo_pin as an INPUT
+  attachInterrupt(digitalPinToInterrupt(echo_pin), read_ultrasonic, CHANGE);
 }
 
 void init_rc() {
@@ -117,29 +116,8 @@ void init_gyro(void) {
   }
 }
 
-// void init_barometer() {
 
-//   for (st = 1; st <= 6; st++) {
-//     Wire.beginTransmission(MS5611_address);  //Start communication with the MPU-6050.
-//     Wire.write(0xA0 + st * 2);               //Send the address that we want to read.
-//     Wire.endTransmission();                  //End the transmission.
-
-//     Wire.requestFrom(MS5611_address, 2);     //Request 2 bytes from the MS5611.
-//     C[st] = Wire.read() << 8 | Wire.read();  //Add the low and high byte to the C[x] calibration variable.
-//   }
-
-//   OFF_a_C2 = C[2] * pow(2, 16);  //This value is pre-calculated to offload the main program loop.
-//   SENS_C1 = C[1] * pow(2, 15);   //This value is pre-calculated to offload the main program loop.
-
-//   //The MS5611 needs a few readings to stabilize.
-//   for (st = 0; st < 100; st++) {  //This loop runs 100 times.
-//     barometer_read();             //Read and calculate the barometer data.
-//     delay(4);                     //The main program loop also runs 250Hz (4ms per loop).
-//   }
-//   actual_pressure = 0;  //Reset the pressure calculations.
-// }
-
-void init_barometer_v2() {
+void init_barometer() {
 
   // Compensation parameters:
 

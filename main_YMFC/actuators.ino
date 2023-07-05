@@ -49,11 +49,11 @@ void act_esc_PWM(){
 }
 
 void act_us_pulse() {
-  if (micros() - sentLastPulse > 7500) {
-    sentLastPulse = micros();
-    digitalWrite(triggerPin, HIGH);
+  if (micros() - sent_last_pulse > 7500) {
+    sent_last_pulse = micros();
+    digitalWrite(trigger_pin, HIGH);
     delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
-    pulseSent = true;
+    digitalWrite(trigger_pin, LOW);
+    pulse_sent = true;
   }
 }

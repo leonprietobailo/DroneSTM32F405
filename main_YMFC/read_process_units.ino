@@ -12,9 +12,9 @@ void read_battery(void) {
 }
 
 void read_rc() {
-  if (contador_flaco == 18) {
-    for (int i = 1; i <= numero_canales; i++) {
-      Mando_canal[i] = map(pulso_instante[2 * i] - pulso_instante[2 * i - 1], 600, 1600, 1000, 2000);
+  if (flank_count == 18) {
+    for (int i = 1; i <= number_channels; i++) {
+      remote_channel[i] = map(pulse_instant[2 * i] - pulse_instant[2 * i - 1], 600, 1600, 1000, 2000);
     }
   }
 }
@@ -172,35 +172,35 @@ void bmp280_compensate_P_int64() {
 ///////////////////////////////////////////////////////////////////////
 
 void read_ultrasonic() {
-  if (pulseSent) {
-    if (digitalRead(echoPin) == HIGH) {
-      pulseStart = micros();
+  if (pulse_sent) {
+    if (digitalRead(echo_pin) == HIGH) {
+      pulse_start = micros();
     } else {
-      pulseEnd = micros();
-      duration = pulseEnd - pulseStart;
-      computedDistance = duration / 1e6 * cAir * 1e2 / 2.0;
+      pulse_end = micros();
+      duration = pulse_end - pulse_start;
+      computed_distance = duration / 1e6 * cAir * 1e2 / 2.0;
 
-      if (computedDistance < 10) {
-        computedDistance = 10;
+      if (computed_distance < 10) {
+        computed_distance = 10;
       }
-      if (computedDistance < 200) {
-        prevDistance = distance;
-        prevDistanceFilt = distanceFilt;
-        distance = computedDistance;
-        distanceFilt = lp.filt(distance);
-        velocity_raw = (distance - prevDistance) / (micros() - timeLast) * 1e6;
-        velocityFilt = velocityFilt * 0.8 + 0.2 * (distanceFilt - prevDistanceFilt) / (micros() - timeLast) * 1e6;
-        velocity = 0.95 * velocity + 0.05 * (distance - prevDistance) / (micros() - timeLast) * 1e6;
+      if (computed_distance < 200) {
+        prev_distance = distance;
+        prev_distance_filt = distance_filt;
+        distance = computed_distance;
+        distance_filt = lp.filt(distance);
+        velocity_raw = (distance - prev_distance) / (micros() - timeLast) * 1e6;
+        velocityFilt = velocityFilt * 0.8 + 0.2 * (distance_filt - prev_distance_filt) / (micros() - timeLast) * 1e6;
+        velocity = 0.95 * velocity + 0.05 * (distance - prev_distance) / (micros() - timeLast) * 1e6;
 
         timeLast = micros();
       }
-      pulseSent = false;
+      pulse_sent = false;
     }
   }
 }
 
 void read_PPM() {
-  if (micros() - pulso_instante[contador_flaco - 1] > 2500) contador_flaco = 0;
-  pulso_instante[contador_flaco] = micros();
-  contador_flaco++;
+  if (micros() - pulse_instant[flank_count - 1] > 2500) flank_count = 0;
+  pulse_instant[flank_count] = micros();
+  flank_count++;
 }

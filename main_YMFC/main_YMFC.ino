@@ -56,27 +56,27 @@ uint8_t parachute_rotating_mem_location;
 
 
 // HC-SR04
-#define triggerPin PC3  // Trigger Pin Ultrasonico
-#define echoPin PC2     // Echo Pin Ultrasonico
+#define trigger_pin PC3  // Trigger Pin Ultrasonico
+#define echo_pin PC2     // Echo Pin Ultrasonico
 float distance;
 float velocity;
 LowPass<2> lp(3, 1e3, true);
-float distanceFilt;
+float distance_filt;
 float velocityFilt;
 float velocity_raw;
-float sentLastPulse, duration, pulseStart, pulseEnd, computedDistance;
-bool pulseSent;
+float sent_last_pulse, duration, pulse_start, pulse_end, computed_distance;
+bool pulse_sent;
 long cAir = 331.3 + 20.0 * 0.606;
 unsigned long timeLast;
-float prevDistance, prevDistanceFilt;
+float prev_distance, prev_distance_filt;
 
 // LED
 volatile long led_timer;
 
 // BUZZER
-float batteryVoltage;
-int buzzerTimer;
-bool toneOn;
+float battery_voltage;
+int buzzer_timer;
+bool tone_on;
 
 // SPI Flash
 #define pin_BUZZER PA6
@@ -86,14 +86,14 @@ uint16_t throttle_str[length_str];
 uint16_t n_str = 0;
 
 // MOTORS
-long tiempo_motores_start, tiempo_1, tiempo_2, tiempo_ON;
+long time_motores_start, time_1, time_2, time_ON;
 
 // FlightSky i6
 #define pin_PPM PA4
-#define numero_canales 8
-uint64_t pulso_instante[numero_canales * 2 + 2];
-uint16_t Mando_canal[numero_canales];
-uint8_t contador_flaco = 1;
+#define number_channels 8
+uint64_t pulse_instant[number_channels * 2 + 2];
+uint16_t remote_channel[number_channels];
+uint8_t flank_count = 1;
 int16_t throttle;
 
 
@@ -199,7 +199,7 @@ void setup() {
   init_components();
   led_off();
 
-  while (Mando_canal[1] < 990 || Mando_canal[2] < 990 || Mando_canal[3] < 990 || Mando_canal[4] < 990) {
+  while (remote_channel[1] < 990 || remote_channel[2] < 990 || remote_channel[3] < 990 || remote_channel[4] < 990) {
     read_rc();
     delay(4);
   }

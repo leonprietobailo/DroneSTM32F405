@@ -11,17 +11,17 @@ void diag_print() {
 
 //    Serial.print(distance);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[1]);
+//    Serial.print(remote_channel[1]);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[2]);
+//    Serial.print(remote_channel[2]);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[3]);
+//    Serial.print(remote_channel[3]);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[4]);
+//    Serial.print(remote_channel[4]);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[5]);
+//    Serial.print(remote_channel[5]);
 //    Serial.print("\t");
-//    Serial.print(Mando_canal[6]);
+//    Serial.print(remote_channel[6]);
 //    Serial.print("\n");
 
   //  Serial.print(distance);
@@ -68,7 +68,7 @@ void diag_print() {
 
   //Serial.print(distance);
   //Serial.print("\t");
-  //Serial.println(distanceFilt);
+  //Serial.println(distance_filt);
 
   //Serial.print(velocity_raw);
   //Serial.print("\t");
@@ -126,7 +126,7 @@ bool written = false;
 
 void diag_flash(void) {
 
-  if (Mando_canal[5] > 1500 && !written) {
+  if (remote_channel[5] > 1500 && !written) {
     if (myFile) {
       Serial.println("Writing...");
       //myFile.println("---");
@@ -151,7 +151,7 @@ void diag_flash(void) {
     }
   }
 
-  if (Mando_canal[5] < 1500 && written) {
+  if (remote_channel[5] < 1500 && written) {
     written = false;
     myFile = fatfs.open("data.csv", FILE_WRITE);
   }
@@ -162,15 +162,15 @@ void diag_buzzer(void) {
   if (battery_voltage <= 10.5) {  // If battery below 10.5 V -> Permanent Buzzer Sound
     tone(pin_BUZZER, 2500);
   } else if (battery_voltage <= 11.2) {     // If battery below 11 V -> Buzzer sounds twice per second
-    if (micros() - buzzerTimer > 0.25e6) {  // If quarter of a second passed (25000 us), change status of buzzer.
-      if (toneOn) {
+    if (micros() - buzzer_timer > 0.25e6) {  // If quarter of a second passed (25000 us), change status of buzzer.
+      if (tone_on) {
         noTone(pin_BUZZER);
-        toneOn = false;
+        tone_on = false;
       } else {
         tone(pin_BUZZER, 2500);
-        toneOn = true;
+        tone_on = true;
       }
-      buzzerTimer = micros();
+      buzzer_timer = micros();
     }
   } else {  // If battery is high, stop all tones
     noTone(pin_BUZZER);
