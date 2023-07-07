@@ -74,7 +74,6 @@ float prev_distance, prev_distance_filt;
 volatile long led_timer;
 
 // BUZZER
-float battery_voltage;
 int buzzer_timer;
 bool tone_on;
 

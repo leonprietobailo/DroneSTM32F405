@@ -1,8 +1,8 @@
 void read_process_units() {
   read_battery();
   read_rc();
-  read_gyro();
-  process_gyro();
+  read_imu();
+  process_imu();
   read_barometer();
 }
 
@@ -19,7 +19,7 @@ void read_rc() {
   }
 }
 
-void read_gyro(void) {
+void read_imu(void) {
   Wire.beginTransmission(MPU6050_ADDRESS);
   Wire.write(MPU6050_ACCEL_XOUT_H);
   Wire.endTransmission();
@@ -42,7 +42,7 @@ void read_gyro(void) {
   gyro_yaw -= manual_gyro_yaw_cal_value;
 }
 
-void process_gyro() {
+void process_imu() {
 
   gyro_roll_input = (gyro_roll_input * 0.7) + (((float)gyro_roll / 65.5) * 0.3);     
   gyro_pitch_input = (gyro_pitch_input * 0.7) + (((float)gyro_pitch / 65.5) * 0.3);  

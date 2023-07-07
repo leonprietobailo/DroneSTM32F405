@@ -89,7 +89,7 @@ void init_gyro(void) {
   if (cal_int != 2000) {
     for (cal_int = 0; cal_int < 2000; cal_int++) {                  
       if (cal_int % 25 == 0) digitalWrite(PB4, !digitalRead(PB4)); 
-      read_gyro();                                              
+      read_imu();                                              
       gyro_roll_cal += gyro_roll;                                  
       gyro_pitch_cal += gyro_pitch;                             
       gyro_yaw_cal += gyro_yaw;                                 

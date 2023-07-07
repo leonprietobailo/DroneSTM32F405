@@ -38,7 +38,7 @@ void ref_gen(){
 	if(fm == FM_alt_hold){
     	throttle = -63.4 * battery_voltage + 2203;
 
-    	if(remote_channel[3] > 1750) pid_altitude_setpoint -= 1.0 / 250.0
+    	if(remote_channel[3] > 1750) pid_altitude_setpoint -= 1.0 / 250.0;
     	else if(remote_channel[3] < 1250 && distance > 50) pid_altitude_setpoint += 1.0 / 250.0;
 	}
 }
