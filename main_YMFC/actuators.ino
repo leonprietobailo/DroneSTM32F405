@@ -24,21 +24,21 @@ void act_esc_outputs() {
   }
 
   else {
-    esc_1 = 1000;  //If start is not 2 keep a 1000us pulse for ess-1.
-    esc_2 = 1000;  //If start is not 2 keep a 1000us pulse for ess-2.
-    esc_3 = 1000;  //If start is not 2 keep a 1000us pulse for ess-3.
-    esc_4 = 1000;  //If start is not 2 keep a 1000us pulse for ess-4.
+    esc_1 = 1000;  
+    esc_2 = 1000; 
+    esc_3 = 1000; 
+    esc_4 = 1000; 
   }
 
-  if (esc_1 < 1000) esc_1 = 950;  //Keep the motors running.
-  if (esc_2 < 1000) esc_2 = 950;  //Keep the motors running.
-  if (esc_3 < 1000) esc_3 = 950;  //Keep the motors running.
-  if (esc_4 < 1000) esc_4 = 950;  //Keep the motors running.
+  if (esc_1 < 1000) esc_1 = 950;  
+  if (esc_2 < 1000) esc_2 = 950;  
+  if (esc_3 < 1000) esc_3 = 950; 
+  if (esc_4 < 1000) esc_4 = 950; 
 
-  if (esc_1 > 2000) esc_1 = 2000;  //Limit the esc-1 pulse to 2000us.
-  if (esc_2 > 2000) esc_2 = 2000;  //Limit the esc-2 pulse to 2000us.
-  if (esc_3 > 2000) esc_3 = 2000;  //Limit the esc-3 pulse to 2000us.
-  if (esc_4 > 2000) esc_4 = 2000;  //Limit the esc-4 pulse to 2000us.
+  if (esc_1 > 2000) esc_1 = 2000; 
+  if (esc_2 > 2000) esc_2 = 2000;  
+  if (esc_3 > 2000) esc_3 = 2000;  
+  if (esc_4 > 2000) esc_4 = 2000; 
 }
 
 void act_esc_PWM(){

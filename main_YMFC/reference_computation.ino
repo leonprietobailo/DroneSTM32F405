@@ -38,9 +38,7 @@ void ref_gen(){
 	if(fm == FM_alt_hold){
     	throttle = -63.4 * battery_voltage + 2203;
 
-    	// [IMPORTANT] To be changed, moving up or down shall be done disabling and resetting altitude hold PID and just adding smooth 
-    	// throttle over hover throttle, to provide small movement.
-    	if(remote_channel[3] > 1750) pid_altitude_setpoint -= 1.0 / 250.0;			// Rate: 1 Pa / second
-    	else if(remote_channel[3] < 1250 && distance > 50) pid_altitude_setpoint += 1.0 / 250.0;	// Rate: 1 Pa / second
+    	if(remote_channel[3] > 1750) pid_altitude_setpoint -= 1.0 / 250.0
+    	else if(remote_channel[3] < 1250 && distance > 50) pid_altitude_setpoint += 1.0 / 250.0;
 	}
 }
