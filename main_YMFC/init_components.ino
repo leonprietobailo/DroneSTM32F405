@@ -5,7 +5,7 @@ void init_components() {
   init_ultrasonic();
   init_rc();
   init_esc();
-  init_gyro();
+  init_imu();
   init_barometer();
 }
 
@@ -50,7 +50,7 @@ void init_esc() {
 }
 
 
-void init_gyro(void) {
+void init_imu(void) {
   Wire.begin();                    
   Wire.beginTransmission(MPU6050_ADDRESS);
   error = Wire.endTransmission();      
